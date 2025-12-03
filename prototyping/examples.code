@@ -1,0 +1,42 @@
+
+
+; comments
+
+; numbers
+1
+1_000
+3.1415
+
+; strings
+"foo"
+
+; symbols
+foo
+bar
+
+; keywords
+:foo
+:bar
+
+; lists
+[1 2 3 4 5]
+
+; maps
+{ :key1 "val1 :key2 "val2" }
+
+; sets
+#{ 1 2 3 }
+
+
+; objects
+#Point {:x  :y}
+
+;; functions
+; definition
+
+func add [lhs rhs] -> + 1 2 ;
+
+; calls
+add 1 2
+
+;; grouping with
