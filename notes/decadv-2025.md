@@ -24,3 +24,7 @@ For example:
 - can i add types using something like [this](https://jimmyhmiller.com/easiest-way-to-build-type-checker) ?
 
 little lisp is fairly straightforward to implement (specially in python) and all so I can get to the things I want to play with fairly fast... and if time and energy permits then perhaps apply whatever is learned into some of the slightly more involve languages (that aren't lisps)
+
+## 03
+
+finished little lisp in python, but found it too limiting for some of the tinkering I wish to do... this is expected as it is meant to be an educational implementation. Still, I feel it can be extended further to get where I need to get in order to start so I'm debating whether to do that or start from a different foundation.

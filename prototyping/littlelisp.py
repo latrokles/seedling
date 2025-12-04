@@ -2,6 +2,7 @@
 
 import argparse
 import functools
+import importlib
 import pathlib
 import os
 import typing
@@ -88,7 +89,14 @@ class Context:
         if self.parent:
             return self.parent.get(identifier)
 
-        # TODO: nil?
+        raise RuntimeError(f'WTF! {identifier=} does not resolve to anything!')
+
+    def __str__(self):
+        return f'Context(scope={self.scope}, parent={self.parent})'
+
+    def __repr__(self):
+        return self.__str__()
+
 
 ## special forms
 def let_form(expr, ctx):
@@ -100,7 +108,6 @@ def let_form(expr, ctx):
         ctx
     )
     return interpret(let_body, let_ctx)
-
 
 def lambda_form(expr, ctx):
     def fn(*args):
@@ -128,13 +135,24 @@ SPECIAL = {
     'if': if_form
 }
 
+## python ffi
+def ffi_call(fn, args, kwargs=None):
+    if not kwargs:
+        kwargs = {}
+
+    split_path = fn.split('.')
+    if len(split_path) == 1:
+        return vars()[fn](*args, **kwargs)
+
+    obj = importlib.import_module(split_path.pop(0))
+    for path in split_path:
+        obj = getattr(obj, path)
+    return obj(*args, **kwargs)
+
+
 LIBRARY = {
-    'head': lambda x: x[0],
-    'tail': lambda x: x[1:],
-    'print': lambda x: print(x),
-    'read': lambda _: input(),
-    '+': lambda x, y: x + y,
-    '-': lambda x, y: x -y,
+    'ffi:import': lambda mod: importlib.import_module(mod),
+    'ffi:call': ffi_call,
 }
 
 
