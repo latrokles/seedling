@@ -9,5 +9,4 @@
 
   (let ((lhs (str->int (read "lhs?")))
 	(rhs (str->int (read "rhs?"))))
-    
     (print (+ lhs rhs))))
