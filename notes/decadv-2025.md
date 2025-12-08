@@ -28,3 +28,17 @@ little lisp is fairly straightforward to implement (specially in python) and all
 ## 03
 
 finished little lisp in python, but found it too limiting for some of the tinkering I wish to do... this is expected as it is meant to be an educational implementation. Still, I feel it can be extended further to get where I need to get in order to start so I'm debating whether to do that or start from a different foundation.
+
+## 06 - 07
+
+been wanting to give `rust` an honest try so felt like whatever I'm trying to do I could try and get it done with `rust`. started by porting some `c` code that implements the bluebook's `bitblt` algorithm and some graphical runtime to build stuff on top of. totally impractical, but fun.
+
+as it's been the case the many other times I have given `rust` a try I've been flipping back and forth between "hell yea!" and "I hate this".
+
+The SDL2 crate's API is quite different from the `c`'s and I cannot use the same old patterns, trying to separate instantiation of SDL resources and their usage was rather frustrating and confusing. I ended giving up trying to find a solution and instead put all the SDL2 resource creation and main loop in `main` and then use the instance of my custom runtime substrate alongside it (rather than embedding SDL resources into it).
+
+Even now as I get a little bit more momentum I find myself just doing what I think the compiler wants me to do with a little help from forum threads and error message searches, but I'm certain some of this is going to come back to bite me sooner rather than later.
+
+I will start again on the **rust book** after I get a few things here done. This feels kinda backwards, but I've always kinda learned my way through things trying them out... tho I feel rust will be the exception. Still trying to keep it fun.
+
+I stopped short of implementing `clip` and `copy_bits`/`merge` for `bitblt`. Once that's done I can implement bresenham's and a few other graphics primitives and then port my basic doodling test program.
