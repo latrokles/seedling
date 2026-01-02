@@ -33,7 +33,7 @@ fn main() {
     let red = Color::new(0xff0000ff);
     let green = Color::new(0x00ff00ff);
 
-    let mut fb = Bitmap::new_at_origin(WIDTH, HEIGHT);
+    let mut fb = Bitmap::new_at_origin(WIDTH.try_into().unwrap(), HEIGHT.try_into().unwrap());
     fb.fill(white);
 
     let mut event_pump = sdl_ctx.event_pump().expect("Unable to create event pump");
