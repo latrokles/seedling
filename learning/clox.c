@@ -6,6 +6,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+
+#define DEBUG_TRACE_EXECUTION
+#define STACK_MAX 256
+
 // -- MEMORY UTILS
 #define GROW_CAPACITY(capacity) \
   ((capacity) < 8 ? 8 : (capacity) * 2)
@@ -29,6 +33,7 @@ void* reallocate(void* pointer, size_t old_size, size_t new_size) {
 
   return result;
 }
+
 
 // -- TYPES & VALUES
 
@@ -68,6 +73,11 @@ void free_value_array(ValueArray* array) {
 
 typedef enum {
   OP_CONSTANT,
+  OP_ADD,
+  OP_SUBTRACT,
+  OP_MULTIPLY,
+  OP_DIVIDE,
+  OP_NEGATE,
   OP_RETURN,
 } OpCode;
 
@@ -115,10 +125,8 @@ void free_chunk(Chunk* chunk) {
   free_value_array(&chunk->constants);
   init_chunk(chunk);
 }
-
 // -- DEBUG
 int disassemble_instruction(Chunk* chunk, int offset);
-
 static int simple_instruction(const char* name, int offset);
 static int constant_instruction(const char* name, Chunk* chunk, int offset);
 
@@ -143,6 +151,16 @@ int disassemble_instruction(Chunk* chunk, int offset) {
   switch(instruction) {
   case OP_CONSTANT:
     return constant_instruction("OP_CONSTANT", chunk, offset);
+  case OP_ADD:
+    return simple_instruction("OP_ADD", offset);
+  case OP_SUBTRACT:
+    return simple_instruction("OP_SUBTRACT", offset);
+  case OP_MULTIPLY:
+    return simple_instruction("OP_MULTIPLY", offset);
+  case OP_DIVIDE:
+    return simple_instruction("OP_DIVIDE", offset);
+  case OP_NEGATE:
+    return simple_instruction("OP_NEGATE", offset);
   case OP_RETURN:
     return simple_instruction("OP_RETURN", offset);
   default:
@@ -164,7 +182,107 @@ static int constant_instruction(const char* name, Chunk* chunk, int offset) {
   return offset + 2;
 }
 
+// -- VM
+
+typedef enum {
+  INTERPRET_OK,
+  INTERPRET_COMPILE_ERROR,
+  INTERPRET_RUNTIME_ERROR
+} InterpretResult;
+
+typedef struct {
+  Chunk* chunk;
+  uint8_t* ip;
+  Value stack[STACK_MAX];
+  Value* stack_top;
+} VM;
+
+VM vm;
+
+void push(Value value);
+Value pop();
+
+static void reset_stack() {
+  vm.stack_top = vm.stack;
+}
+
+static InterpretResult run() {
+#define READ_BYTE()   (*vm.ip++)
+#define READ_CONSTANT() (vm.chunk->constants.values[READ_BYTE()])
+#define BINARY_OP(op) \
+  do { \
+    double b = pop(); \
+    double a = pop(); \
+    push(a op b);     \
+  } while (false)
+
+  for (;;) {
+#ifdef DEBUG_TRACE_EXECUTION
+    printf("          ");
+    for (Value* slot = vm.stack; slot < vm.stack_top; slot++) {
+      printf("[ ");
+      print_value(*slot);
+      printf(" ]");
+    }
+    printf("\n");
+    disassemble_instruction(vm.chunk, (int)(vm.ip - vm.chunk->code));
+#endif
+
+    uint8_t instruction;
+    switch (instruction = READ_BYTE()) {
+    case OP_CONSTANT: {
+      Value constant = READ_CONSTANT();
+      push(constant);
+      break;
+    }
+    case OP_ADD:      BINARY_OP(+); break;
+    case OP_SUBTRACT: BINARY_OP(-); break;
+    case OP_MULTIPLY: BINARY_OP(*); break;
+    case OP_DIVIDE:   BINARY_OP(/); break;
+
+    case OP_NEGATE:
+      push(-pop());
+      break;
+
+    case OP_RETURN: {
+      print_value(pop());
+      printf("\n");
+      return INTERPRET_OK;
+    }
+
+    }
+  }
+#undef READ_BYTE
+#undef READ_CONSTANT
+#undef BINARY_OP
+}
+
+void init_vm() {
+  reset_stack();
+}
+
+InterpretResult interpret(Chunk* chunk) {
+  vm.chunk = chunk;
+  vm.ip = vm.chunk->code;
+  return run();
+}
+
+void push(Value value) {
+  *vm.stack_top = value;
+  vm.stack_top++;
+}
+
+Value pop() {
+  vm.stack_top--;
+  return *vm.stack_top;
+}
+
+void free_vm() {}
+
+
 int main(int argc, const char* argv[]) {
+  init_vm();
+
   Chunk chunk;
   init_chunk(&chunk);
 
@@ -172,8 +290,23 @@ int main(int argc, const char* argv[]) {
   write_chunk(&chunk, OP_CONSTANT, 123);
   write_chunk(&chunk, constant, 123);
 
+  constant = add_constant(&chunk, 3.4);
+  write_chunk(&chunk, OP_CONSTANT, 123);
+  write_chunk(&chunk, constant, 123);
+
+  write_chunk(&chunk, OP_ADD, 123);
+
+  constant = add_constant(&chunk, 5.6);
+  write_chunk(&chunk, OP_CONSTANT, 123);
+  write_chunk(&chunk, constant, 123);
+
+  write_chunk(&chunk, OP_DIVIDE, 123);
+
+  write_chunk(&chunk, OP_NEGATE, 123);
   write_chunk(&chunk, OP_RETURN, 123);
-  disassemble_chunk(&chunk, "test chunk");
+
+  interpret(&chunk);
+  free_vm();
   free_chunk(&chunk);
   return 0;
 }
