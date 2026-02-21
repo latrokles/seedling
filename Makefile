@@ -10,3 +10,5 @@ glitchz:
 
 namedia:
 	cc namedia.c $(SDL2_FLAGS) $(JSON_FLAGS) $(CURL_FLAGS) -o $(BIN)/namedia
+
+all: glitchz namedia
