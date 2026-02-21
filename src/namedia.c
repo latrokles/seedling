@@ -79,7 +79,7 @@ int search(CURL *curl, char query[]) {
   headers = curl_slist_append(headers, "Accept: application/json");
   headers = curl_slist_append(headers, "Content-Type: application/json");
 
-  json_object *request_json = json_object_from_file("assets/yt-query.json");
+  json_object *request_json = json_object_from_file("data/youtube-search-request.json");
   json_object_object_add(request_json, "query", json_object_new_string(query));
   printf("Json request:\n\n%s\n", json_object_to_json_string_ext(request_json, JSON_C_TO_STRING_PRETTY));
 
