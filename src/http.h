@@ -21,10 +21,31 @@
   TODO: methods to create and destroy request and response structs.
 */
 
+// TODO: evaluate defining an HttpHeader struct instead of char *headers[]
+// TODO: add support for query params
+typedef struct HttpRequest {
+  const char *method;
+  const char *uri;
+  const char *body;
+  size_t header_count;
+  char *headers[];
+} HttpRequest;
+
+typedef struct HttpResponse {
+  int status;
+  char *body;
+  size_t body_size;
+  size_t header_count;
+  char *headers[];
+} HttpResponse;
+
 typedef struct HTTP_Body {
   char *data;
   size_t size;
 } HTTP_Body;
 
+void destroy_http_response(HttpResponse *response) {
+  free(response->body);
+}
 
-int http_post(CURL *curl, char *url, char *http_headers[], size_t header_count, const char *req_body, HTTP_Body *resp_body);
+int http_post(CURL *curl, HttpRequest request, HttpResponse *response);

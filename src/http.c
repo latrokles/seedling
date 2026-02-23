@@ -1,49 +1,50 @@
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <curl/curl.h>
 #include "http.h"
 
 static size_t curl_callback(void *contents, size_t size, size_t nmemb, void *userp) {
-  size_t real_size = size * nmemb;        // calculate buffer size
-  HTTP_Body *body = (HTTP_Body *) userp;  // cast ptr to body struct ptr
+  size_t real_size = size * nmemb;                  // calculate buffer size
+  HttpResponse *response = (HttpResponse *) userp;  // cast ptr to body struct ptr
 
   // reallocate data buffer
-  body->data = (char *) realloc(body->data, body->size + real_size + 1);
-  if (body->data == NULL) {
+  response->body= (char *) realloc(response->body, response->body_size + real_size + 1);
+  if (response->body == NULL) {
     fprintf(stderr, "ERROR: Failed to expand buffer to store response body.");
     exit(71);  // no system resources available
   }
 
   // copy response body data
-  memcpy(&(body->data[body->size]), contents, real_size);
-  body->size += real_size;
-  body->data[body->size] = 0;
+  memcpy(&(response->body[response->body_size]), contents, real_size);
+  response->body_size += real_size;
+  response->body[response->body_size] = 0;
   return real_size;
 }
 
-int http_post(CURL *curl, char *url, char *http_headers[], size_t header_count, const char *req_body, HTTP_Body *resp_body) {
+int http_post(CURL *curl, HttpRequest request, HttpResponse *response) {
   CURLcode code;
 
   int http_code = 0;
   struct curl_slist *headers = NULL;
 
-  resp_body->data = (char *) calloc(1, sizeof(resp_body->data));
-  if (resp_body->data == NULL) {
+  response->body = (char *) calloc(1, sizeof(response->body));
+  if (response->body == NULL) {
     fprintf(stderr, "ERROR: Failed to allocate memory for response body.");
     exit(71);  // no system resources available
   }
-  resp_body->size = 0;
+  response->body_size = 0;
 
-  for (size_t header_idx = 0; header_idx < header_count; header_idx++) {
-    headers = curl_slist_append(headers, http_headers[header_idx]);
+  for (size_t header_idx = 0; header_idx < request.header_count; header_idx++) {
+    headers = curl_slist_append(headers, request.headers[header_idx]);
     // TODO: DEBUG log headers
   }
 
-  curl_easy_setopt(curl, CURLOPT_URL, url);                      // set url
+  curl_easy_setopt(curl, CURLOPT_URL, request.uri);              // set url
   curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);           // set headers
-  curl_easy_setopt(curl, CURLOPT_POSTFIELDS, req_body);          // set POST method and body
+  curl_easy_setopt(curl, CURLOPT_POSTFIELDS, request.body);      // set POST method and body
   curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, curl_callback);  // set callback
-  curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *) resp_body); // set pointer to response
+  curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *) response);  // set pointer to response
   curl_easy_setopt(curl, CURLOPT_TIMEOUT, 5);                    // set timeout in seconds
   curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1);             // follow redirects
   curl_easy_setopt(curl, CURLOPT_MAXREDIRS, 1);                  // max 1 redirect
@@ -54,7 +55,7 @@ int http_post(CURL *curl, char *url, char *http_headers[], size_t header_count, 
   if (code != CURLE_OK) {
     fprintf(stderr,
 	    "ERROR: Failed to perform network call, url=%s, error=%s.",
-            url,
+            request.uri,
             curl_easy_strerror(code));
 
     curl_slist_free_all(headers);
