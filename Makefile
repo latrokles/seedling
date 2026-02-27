@@ -12,6 +12,7 @@ INCLUDE_DIRS=-I. -I$(PATH_UNITY) -I$(PATH_UNITY_FIXTURE) -I$(PATH_UNITY_MEMORY) 
 UNITY_SRC_FILES=$(PATH_UNITY)/unity.c $(PATH_UNITY_FIXTURE)/unity_fixture.c $(PATH_UNITY_MEMORY)/unity_memory.c
 
 CFLAGS=-std=c99
+TEST_CFLAGS=-fprofile-arcs -ftest-coverage 
 SDL2FLAGS=`sdl2-config --cflags --libs`
 JSONFLAGS=`pkg-config --cflags --libs json-c`
 CURLFLAGS=`pkg-config --cflags --libs libcurl`
@@ -23,8 +24,13 @@ namedia:
 	cc $(PATH_SRC)/namedia.c $(SDL2FLAGS) $(JSONFLAGS) $(CURLFLAGS) -o $(PATH_BIN)/namedia
 
 test:
-	cc $(CFLAGS) $(INCLUDE_DIRS) $(PATH_TEST)/runners/all_tests.c $(UNITY_SRC_FILES) -o $(PATH_BUILD)/all_tests.out
+	cc $(CFLAGS) $(TEST_CFLAGS) $(INCLUDE_DIRS) $(PATH_TEST)/runners/all_tests.c $(UNITY_SRC_FILES) -o $(PATH_BUILD)/all_tests.out
 	- $(PATH_BUILD)/all_tests.out -v
+	lcov --capture --directory $(PATH_BUILD) --output-file $(PATH_BUILD)/coverage.info
+	lcov --remove $(PATH_BUILD)/coverage.info '/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/' 'vendor' \
+		--output-file $(PATH_BUILD)/coverage.filtered.info
+	genhtml $(PATH_BUILD)/coverage.filtered.info --output-directory $(PATH_BUILD)/coverage
+
 	rm $(PATH_BUILD)/*.out
 
 
