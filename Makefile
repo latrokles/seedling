@@ -31,7 +31,11 @@ test:
 		--output-file $(PATH_BUILD)/coverage.filtered.info
 	genhtml $(PATH_BUILD)/coverage.filtered.info --output-directory $(PATH_BUILD)/coverage
 
+test_clean:
 	rm $(PATH_BUILD)/*.out
-
+	rm $(PATH_BUILD)/*.*.gcno
+	rm $(PATH_BUILD)/*.*.gcda
+	rm $(PATH_BUILD)/coverage.*
+	rm -r $(PATH_BUILD)/coverage
 
 all: glitchz namedia
