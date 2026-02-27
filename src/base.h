@@ -1,3 +1,6 @@
+#ifndef _BASE_H_
+#define _BASE_H_
+
 #include <stddef.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -25,3 +28,5 @@ typedef uintptr_t uptr;
 typedef char      byte;
 typedef ptrdiff_t size;
 typedef size_t    usize;
+
+#endif

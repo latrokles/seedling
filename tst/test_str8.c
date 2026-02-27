@@ -1,4 +1,3 @@
-#include <assert.h>
 #include <stdio.h>
 
 #include "unity.h"
@@ -37,10 +36,18 @@ TEST(Str8Tests, str8clone_copies_str8) {
   TEST_ASSERT_EQUAL_STRING(s.data, copy.data);
 }
 
-TEST(Str8Tests, str8free_frees_underlying_string_memory_and_sets_size_to_zero) {
+TEST(Str8Tests, str8free_frees_underlying_string_memory_and_sets_size_to_zero_if_allocated) {
   Str8 s = str8from_charbuff("foobar", 6);
   str8free(&s);
 
   TEST_ASSERT_EQUAL(NULL, s.data);
   TEST_ASSERT_EQUAL(0, s.size);
+}
+
+TEST(Str8Tests, str8free_is_noop_if_not_allocated) {
+  Str8 s = str8lit("foo");
+  str8free(&s);
+
+  TEST_ASSERT_EQUAL("foo", s.data);
+  TEST_ASSERT_EQUAL(3, s.size);
 }
