@@ -6,7 +6,7 @@
 #define lengthof(s)                  (countof(s) - 1)
 #define new(type, numbytes)          (type *)malloc(numbytes)
 #define resize(type, ptr, numbytes)  (type *)realloc(ptr, numbytes)
-#define delete(ptr)                  free(ptr)
+#define delete(ptr)                  { free(ptr); (ptr) = NULL; }
 
 typedef int8_t    i8;
 typedef int16_t  i16;
