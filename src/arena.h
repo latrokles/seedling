@@ -1,14 +1,16 @@
 #ifndef _MEM_ARENA_H_
-#define _MEM_ARENA_H
+#define _MEM_ARENA_H_
 
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
-#define MIN            (a, b) (((a) < (b)) ? (a) : (b))
-#define ALIGN_UP_POW2  (n, p) (((u64)(n) + ((u64)(p) - 1)) & (~((u64)(p) - 1)))
-#define ARENA_BASE_POS (sizeof(MemoryArena))
-#define ARENA_ALIGN    (sizeof(uptr))
+#define ARENA_BASE_POS      (sizeof(MemoryArena))
+#define ARENA_ALIGN         (sizeof(uptr))
+
+#define min(a, b)           (((a) < (b)) ? (a) : (b))
+#define align_up_pow2(n, p) (((u64)(n) + ((u64)(p) - 1)) & (~((u64)(p) - 1)))
 
 typedef struct MemoryArena {
   u64 capacity;
@@ -43,7 +45,7 @@ void         arena_destroy(MemoryArena *arena) {
 }
 
 void *arena_push(MemoryArena *arena, u64 size, bool nonzero) {
-  u64 pos_aligned = ALIGN_UP_POW2(arena->position, ARENA_ALIGN);
+  u64 pos_aligned = align_up_pow2(arena->position, ARENA_ALIGN);
   u64 new_pos = pos_aligned + size;
 
   if (new_pos > arena->capacity) {
@@ -61,7 +63,7 @@ void *arena_push(MemoryArena *arena, u64 size, bool nonzero) {
   return out;
 }
 void  arena_pop(MemoryArena *arena, u64 size) {
-  size = MIN(size, arena->position - ARENA_BASE_POS);
+  size = min(size, arena->position - ARENA_BASE_POS);
   arena->position -= size;
 }
 

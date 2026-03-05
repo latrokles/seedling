@@ -4,50 +4,49 @@
 #include <stdbool.h>
 #include <string.h>
 
-enum Str8Code {
-  STR8ERR_OK,
-  STR8ERR_INCOMPLETE_OP
-};
-
+/* Str8 are meant to be read, not written to */
 typedef struct Str8 {
-  bool allocated;
   u64 size;
-  u8 *data;
+  char *data;
 } Str8;
 
-#define str8lit(s)  (Str8){false, lengthof(s), (u8 *)s}  // use for literal strings (ie. "foo")
+/* TODO define Str8Buff to be written to and read from */
+
+#define str8lit(s)  (Str8){lengthof(s), (char *)s}  // use for literal strings (ie. "foo")
 #define str8fmt(s8) (int)(s8).size, (s8).data
 
+/*
+ * TODO implement more functionality
+ * str8cmp
+ * str8trim
+ * str8strip
+ * str8rstrip
+ * str8lstrip
+ * str8upcase
+ * str8downcase
+ */
+
 Str8 str8from_charbuff(char *buff, u64 size);
-Str8 str8new(u64 size);
-Str8 str8clone(Str8 s);
-void str8free(Str8 *s);
+Str8 str8clone(MemoryArena *arena, Str8 s);
+bool str8equals(Str8 lhs, Str8 rhs);
+
 
 Str8 str8from_charbuff(char *buff, u64 size) {
-  Str8 s = str8new(size);
-  memcpy(s.data, buff, size + 1);
-  return s;
-}
-
-Str8 str8new(u64 size) {
   Str8 s = {};
-  s.allocated = true;
+  s.data = buff;
   s.size = size;
-  s.data = new(u8, size + 1);
   return s;
 }
 
-Str8 str8clone(Str8 s) {
-  Str8 newstr = str8new(s.size);
-  memcpy(newstr.data, s.data, s.size + 1);
-  return newstr;
-}
+Str8 str8clone(MemoryArena *arena, Str8 s) {
+  Str8 new_str = {};
+  new_str.data = (char *)arena_push(arena, s.size, false);
+  new_str.size = s.size;
 
-void str8free(Str8 *s) {
-  if (s->allocated) {
-    delete(s->data);
-    s->size = 0;
+  if (s.size) {
+    memcpy(new_str.data, s.data, s.size);
   }
+  return new_str;
 }
 
 #endif
