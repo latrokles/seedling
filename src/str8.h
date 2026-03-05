@@ -12,8 +12,9 @@ typedef struct Str8 {
 
 /* TODO define Str8Buff to be written to and read from */
 
-#define str8lit(s)  (Str8){lengthof(s), (char *)s}  // use for literal strings (ie. "foo")
-#define str8fmt(s8) (int)(s8).size, (s8).data
+#define STR8LIT(s)                                                             \
+  (Str8) { LENGTHOF(s), (char *)s } // use for literal strings (ie. "foo")
+#define STR8FMT(s8) (int)(s8).size, (s8).data
 
 /*
  * TODO implement more functionality
@@ -29,7 +30,6 @@ typedef struct Str8 {
 Str8 str8from_charbuff(char *buff, u64 size);
 Str8 str8clone(MemoryArena *arena, Str8 s);
 bool str8equals(Str8 lhs, Str8 rhs);
-
 
 Str8 str8from_charbuff(char *buff, u64 size) {
   Str8 s = {};

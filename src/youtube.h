@@ -10,12 +10,12 @@ typedef struct MediaInfo {
   char *uid;
   char *title;
   char *length;
-} MediaInfo ;
+} MediaInfo;
 
 typedef YouTubeSearchResults {
   YouTubeSearchReturnCode code;
   MediaInfo results[];
-} YouTubeSearchResults;
+}
+YouTubeSearchResults;
 
-
-YouTubeSearchResults* perform_youtube_search(CURL *curl, char query[]);
+YouTubeSearchResults *perform_youtube_search(CURL *curl, char query[]);

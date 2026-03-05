@@ -1,6 +1,8 @@
 #include <curl/curl.h>
 
-#define USER_AGENT "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+#define USER_AGENT                                                             \
+  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like " \
+  "Gecko) Chrome/70.0.3538.77 Safari/537.36"
 
 /*
   TODO: define HTTP_Request and HTTP_Response structs
@@ -44,8 +46,6 @@ typedef struct HTTP_Body {
   size_t size;
 } HTTP_Body;
 
-void destroy_http_response(HttpResponse *response) {
-  free(response->body);
-}
+void destroy_http_response(HttpResponse *response) { free(response->body); }
 
 int http_post(CURL *curl, HttpRequest request, HttpResponse *response);

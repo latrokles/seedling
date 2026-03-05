@@ -1,8 +1,9 @@
 #include <assert.h>
-#include <stdlib.h>
-#include <stdio.h>
 #include <curl/curl.h>
 #include <json-c/json.h>
+#include <stdio.h>
+#include <stdlib.h>
+
 #include "../src/http.h"
 
 // TODO use a proper testing library
@@ -24,13 +25,12 @@ int main(void) {
   json_object *body = json_object_from_file("data/youtube-search-request.json");
   json_object_object_add(body, "query", json_object_new_string(line));
 
-  HttpRequest req = {
-    .method = "POST",
-    .uri = url,
-    .body = json_object_to_json_string(body),
-    .header_count = 2,
-    .headers = { "Accept: application/json", "Content-Type: application/json" }
-  };
+  HttpRequest req = {.method = "POST",
+                     .uri = url,
+                     .body = json_object_to_json_string(body),
+                     .header_count = 2,
+                     .headers = {"Accept: application/json",
+                                 "Content-Type: application/json"}};
 
   int http_code = http_post(curl, req, resp_ptr);
   assert((printf("http_code=%d must be 200\n", http_code), http_code == 200));
