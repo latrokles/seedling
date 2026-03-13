@@ -1,5 +1,24 @@
-#ifndef _MEM_ARENA_H_
-#define _MEM_ARENA_H_
+/*
+* arena.h
+*
+* Provides a rather simple implementation of an arena allocator based off:
+* https://www.youtube.com/watch?v=jgiMagdjA1
+*
+* It's a simpler way to manage memory in c by grouping related allocations
+* in order to not manage them individually and potentially missing - or complicating -
+* their deallocation.
+*
+* With an Arena you allocate a chunk of memory to use up front and then use that to
+* allocate memory as you go. The arena is then destroyed when none of the objects
+* that use it are no longer needed.
+*
+* This is a very simple arena implementation that uses malloc/free, but as I get more
+* familiar with this technique and learn some more this may get replaced with a set
+* of different allocators.
+*/
+
+#ifndef __MEM_ARENA_H__
+#define __MEM_ARENA_H__
 
 #include <stdbool.h>
 #include <stdio.h>

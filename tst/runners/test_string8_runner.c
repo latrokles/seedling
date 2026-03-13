@@ -1,0 +1,27 @@
+#include "unity.h"
+#include "unity_fixture.h"
+
+#include "test_string8.c"
+
+TEST_GROUP_RUNNER(String8Tests) {
+  RUN_TEST_CASE(String8Tests, string8_creates_string8_struct);
+  RUN_TEST_CASE(String8Tests, string8_from_charbuf_creates_an_arena_allocated_string8_from_char_buffer);
+  RUN_TEST_CASE(String8Tests, string8_clone_copies_string8);
+  RUN_TEST_CASE(String8Tests, string8_substringfrom_returns_slice_from_start_index_to_end_of_s);
+  RUN_TEST_CASE(String8Tests, string8_substringfrom_returns_empty_string_when_start_index_is_out_of_bounds);
+  RUN_TEST_CASE(String8Tests, string8_get_returns_char_at_index);
+  RUN_TEST_CASE(String8Tests, string8_compare_returns_negative_value_when_lhs_less_than_rhs);
+  RUN_TEST_CASE(String8Tests, string8_compare_returns_positive_value_when_lhs_greater_than_rhs);
+  RUN_TEST_CASE(String8Tests, string8_compare_returns_zero_when_lhs_less_equals_rhs);
+  RUN_TEST_CASE(String8Tests, string8_equals_returns_true_when_lhs_and_rhs_have_equal_values);
+  RUN_TEST_CASE(String8Tests, string8_equals_returns_false_when_lhs_and_rhs_have_different_length);
+  RUN_TEST_CASE(String8Tests, string8_equals_returns_false_when_lhs_and_rhs_dont_have_equal_values);
+  RUN_TEST_CASE(String8Tests, string8_startswith_returns_true_if_prefix_is_empty);
+  RUN_TEST_CASE(String8Tests, string8_startswith_returns_true_if_s_starts_with_prefix);
+  RUN_TEST_CASE(String8Tests, string8_startswith_returns_false_if_prefix_is_longer_than_s);
+  RUN_TEST_CASE(String8Tests, string8_startswith_returns_false_if_s_does_not_start_with_prefix);
+  RUN_TEST_CASE(String8Tests, string8_endswith_returns_true_if_suffix_is_empty);
+  RUN_TEST_CASE(String8Tests, string8_endswith_returns_true_if_s_ends_with_suffix);
+  RUN_TEST_CASE(String8Tests, string8_endswith_returns_false_if_suffix_is_longer_than_s);
+  RUN_TEST_CASE(String8Tests, string8_endswith_returns_false_if_s_does_not_end_with_suffix);
+}
