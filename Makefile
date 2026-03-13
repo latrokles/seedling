@@ -12,7 +12,7 @@ INCLUDE_DIRS=-I. -I$(PATH_UNITY) -I$(PATH_UNITY_FIXTURE) -I$(PATH_UNITY_MEMORY) 
 UNITY_SRC_FILES=$(PATH_UNITY)/unity.c $(PATH_UNITY_FIXTURE)/unity_fixture.c $(PATH_UNITY_MEMORY)/unity_memory.c
 
 CFLAGS=-std=c99
-TEST_CFLAGS=-fprofile-arcs -ftest-coverage 
+TEST_CFLAGS=-g -gdwarf-4 -fprofile-arcs -ftest-coverage 
 SDL2FLAGS=`sdl2-config --cflags --libs`
 JSONFLAGS=`pkg-config --cflags --libs json-c`
 CURLFLAGS=`pkg-config --cflags --libs libcurl`
@@ -31,7 +31,10 @@ test:
 		--output-file $(PATH_BUILD)/coverage.filtered.info
 	genhtml $(PATH_BUILD)/coverage.filtered.info --output-directory $(PATH_BUILD)/coverage
 
-test_clean:
+test-http:
+	cc $(PATH_TEST)/test_http.c $(CFLAGS) $(TEST_CFLAGS) $(JSONFLAGS) $(CURLFLAGS) -o $(PATH_BUILD)/test_http.out
+
+test-clean:
 	rm $(PATH_BUILD)/*.out
 	rm $(PATH_BUILD)/*.*.gcno
 	rm $(PATH_BUILD)/*.*.gcda

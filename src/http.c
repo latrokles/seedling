@@ -4,51 +4,63 @@
 #include <stdlib.h>
 #include <string.h>
 
-static size_t curl_callback(void *contents, size_t size, size_t nmemb,
-                            void *userp) {
-  size_t real_size = size * nmemb;                // calculate buffer size
-  HttpResponse *response = (HttpResponse *)userp; // cast ptr to body struct ptr
+/*
+ * Used to store and process the contents of a CURL data transfer.
+ * I found it commplicated to pass an arena into this so opted for
+ * malloc/realloc/free here and then copy it into an arena allocated
+ * String8
+ */
+typedef struct Chunk {
+  char* memory;
+  usize size;
+} Chunk;
+
+static size_t curl_callback(void *contents, size_t size, size_t nmemb, void *userp) {
+  size_t real_size = size * nmemb; // calculate buffer size
+  Chunk *chunk = (Chunk *)userp;   // cast ptr to body struct ptr
 
   // reallocate data buffer
-  response->body =
-      (char *)realloc(response->body, response->body_size + real_size + 1);
-  if (response->body == NULL) {
+  chunk->memory = (char *)realloc(chunk->memory, chunk->size + real_size + 1);
+
+  if (chunk->memory == NULL) {
     fprintf(stderr, "ERROR: Failed to expand buffer to store response body.");
-    exit(71); // no system resources available
+    // CURL will report this as a failure
+    return 0;
   }
 
   // copy response body data
-  memcpy(&(response->body[response->body_size]), contents, real_size);
-  response->body_size += real_size;
-  response->body[response->body_size] = 0;
+  memcpy(&(chunk->memory[chunk->size]), contents, real_size);
+  chunk->size += real_size;
+  chunk->memory[chunk->size] = 0;
   return real_size;
 }
 
-int http_post(CURL *curl, HttpRequest request, HttpResponse *response) {
+String8 http_response_get_header(HttpResponse *resp, String8 header_name) {
+  for (usize i = 0; i < resp->header_count; i++) {
+    if (string8_startswith(resp->headers[i], header_name)) {
+      return string8_substringfrom(resp->headers[i], header_name.length + 1);
+    }
+  }
+  return (String8){ .length = 0 };
+}
+
+HttpResponse http_post(CURL *curl, HttpRequest request, MemoryArena *arena) {
   CURLcode code;
 
   int http_code = 0;
   struct curl_slist *headers = NULL;
-
-  response->body = (char *)calloc(1, sizeof(response->body));
-  if (response->body == NULL) {
-    fprintf(stderr, "ERROR: Failed to allocate memory for response body.");
-    exit(71); // no system resources available
-  }
-  response->body_size = 0;
+  Chunk chunk = { .memory = NULL, .size = 0 };
 
   for (size_t header_idx = 0; header_idx < request.header_count; header_idx++) {
-    headers = curl_slist_append(headers, request.headers[header_idx]);
     // TODO: DEBUG log headers
+    headers = curl_slist_append(headers, request.headers[header_idx].data);
   }
 
   curl_easy_setopt(curl, CURLOPT_URL, request.uri);    // set url
   curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers); // set headers
-  curl_easy_setopt(curl, CURLOPT_POSTFIELDS,
-                   request.body); // set POST method and body
+  curl_easy_setopt(curl, CURLOPT_POSTFIELDS, request.body); // set POST method and body
   curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, curl_callback); // set callback
-  curl_easy_setopt(curl, CURLOPT_WRITEDATA,
-                   (void *)response);                // set pointer to response
+  curl_easy_setopt(curl, CURLOPT_WRITEDATA, &chunk);            // set pointer to response
   curl_easy_setopt(curl, CURLOPT_TIMEOUT, 5);        // set timeout in seconds
   curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1); // follow redirects
   curl_easy_setopt(curl, CURLOPT_MAXREDIRS, 1);      // max 1 redirect
@@ -58,16 +70,20 @@ int http_post(CURL *curl, HttpRequest request, HttpResponse *response) {
   code = curl_easy_perform(curl);
   if (code != CURLE_OK) {
     fprintf(stderr, "ERROR: Failed to perform network call, url=%s, error=%s.",
-            request.uri, curl_easy_strerror(code));
+            request.uri.data, curl_easy_strerror(code));
 
+    free(chunk.memory);
     curl_slist_free_all(headers);
     curl_easy_reset(curl);
-    return http_code;
+    return (HttpResponse){ .status = (usize)http_code };
   }
 
+  String8 body = string8_from_charbuf(chunk.memory, chunk.size, arena);
+
+  free(chunk.memory);
   curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &http_code);
   curl_slist_free_all(headers);
   curl_easy_reset(curl);
 
-  return http_code;
+  return (HttpResponse){ .status = (usize) http_code, .body = body };
 }
