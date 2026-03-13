@@ -1,5 +1,8 @@
 #ifndef __HTTP_H__
 #define __HTTP_H__
+
+#include <stdbool.h>
+
 #include <curl/curl.h>
 
 #define USER_AGENT                                                             \
@@ -13,6 +16,11 @@
 
 // TODO: evaluate defining an HttpHeader struct instead of char *headers[]
 // TODO: add support for query params
+
+typedef struct HttpClient {
+  CURL *curl;
+  bool created;
+} HttpClient;
 
 typedef struct HttpRequest {
   String8 method;
@@ -32,6 +40,9 @@ typedef struct HttpResponse {
 
 String8 http_response_get_header(HttpResponse *resp, String8 header_name);
 
-HttpResponse http_post(CURL *curl, HttpRequest request, MemoryArena *arena);
+HttpClient http_client_create();
+void http_client_destroy(HttpClient *client);
+
+HttpResponse http_post(HttpClient client, HttpRequest request, MemoryArena *arena);
 
 #endif

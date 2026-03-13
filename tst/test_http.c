@@ -1,5 +1,4 @@
 #include <assert.h>
-#include <curl/curl.h>
 #include <json-c/json.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -29,12 +28,9 @@ String8 prepare_request_body(String8 query, MemoryArena *arena) {
 }
 
 int main(void) {
-  CURL *curl;
-
-  /* initialize curl handle */
-  if ((curl = curl_easy_init()) == NULL) {
-    fprintf(stderr, "ERROR: Failed to create curl handle");
-    return 1;
+  HttpClient http = http_client_create();
+  if (!http.created) {
+    exit(1);
   }
 
   MemoryArena *http_arena = arena_create(sizeof(char) * 2000000);
@@ -54,13 +50,13 @@ int main(void) {
   };
 
 
-  HttpResponse resp = http_post(curl, req, http_arena);
-  //assert((printf("http_code=%zu must be 200\n", resp.status), resp.status == 200));
+  HttpResponse resp = http_post(http, req, http_arena);
+  assert((printf("http_code=%zu must be 200\n", resp.status), resp.status == 200));
   assert(resp.body.length > 0);
 
   printf("http POST response:\n%s\n", resp.body.data);
 
   arena_destroy(http_arena);
-  curl_easy_cleanup(curl);
+  http_client_destroy(&http);
   return 0;
 }
