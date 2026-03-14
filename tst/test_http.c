@@ -19,10 +19,6 @@ String8 prepare_request_body(String8 query, MemoryArena *arena) {
   char *jsonstr = (char *)json_object_to_json_string(body);
   String8 req_body = string8_from_charbuf(jsonstr, strlen(jsonstr), arena);
 
-  printf("json_body=%s\n", (char *)json_object_to_json_string(body));
-  printf("json_body_length=%llu\n", (u64)strlen(jsonstr));
-  printf("req_body=%s\n", req_body.data);
-
   json_object_put(body);
   return req_body;
 }
@@ -54,7 +50,7 @@ int main(void) {
   assert((printf("http_code=%zu must be 200\n", resp.status), resp.status == 200));
   assert(resp.body.length > 0);
 
-  printf("http POST response:\n%s\n", resp.body.data);
+  printf("\n%s\n", resp.body.data);
 
   arena_destroy(http_arena);
   http_client_destroy(&http);
