@@ -10,37 +10,63 @@
 #include "http.c"
 #include "yt.h"
 
-
-String8 parse_query(int argc, char *argv[]);
-
 int main(int argc, char *argv[]) {
   HttpClient client = http_client_create();
   if (!client.created) { return -1; }
 
   MemoryArena *arena = arena_create(sizeof(char) * 2000000);
+  YoutubeSearchResponse response;
 
-  String8 query = parse_query(argc, argv);
-  YoutubeSearchResponse response = yt_search(client, query, arena);
+  char line[1024];
+  for (;;) {
+    printf("> ");
 
-  printf("Total videos found: %zu\n", response.video_count);
+    if (!fgets(line, sizeof(line), stdin)) {
+      printf("\n");
+      break;
+    }
 
-  for (usize i = 0; i < response.video_count; i++) {
-    // TODO add method to get a specific video by index
-    VideoData video = response.videos[i];
+    String8 parsed = STRING8(line);
 
-    // TODO unpack this better
-    printf("index=%zu: %s\t%s\t%s\n", i, video.uid.data, video.length.data, video.title.data);
-    printf("\t-- %s\n", video.url.data);
+    if (string8_startswith(parsed, STRING8("/help"))) {
+      printf("\t- /help.   this help menu.\n");
+      printf("\t- /search  search for videos to play.\n");
+      printf("\t- /play.   play video with index.\n");
+      printf("\t- /quit    quit.\n");
+    }
+
+    if (string8_startswith(parsed, STRING8("/search "))) {
+      String8 query = string8_substringfrom(parsed, 8);
+      response = yt_search(client, query, arena);
+
+      printf("Searching for query=%s\n", query.data);
+      printf("Total videos found: %zu\n", response.video_count);
+      for (usize i = 0; i < response.video_count; i++) {
+        // TODO add method to get a specific video by index
+        VideoData video = response.videos[i];
+
+        // TODO unpack this better
+        printf("%zu: %s\t%s\t%s\n", i, video.uid.data, video.length.data, video.title.data);
+      }
+    }
+
+    if (string8_startswith(parsed, STRING8("/play "))) {
+      String8 selected = string8_substringfrom(parsed, 6);
+      usize index = atoi(selected.data);
+      VideoData video_to_play = response.videos[index];
+
+      printf("Playing url=%s...\n", video_to_play.url.data);
+      String8 video_arg = string8_join(arena, STRING8(""), 3, STRING8("'"), video_to_play.url, STRING8("'"));
+      system(string8_concat(STRING8("mpv "), video_arg, arena).data);
+    }
+
+    if (string8_startswith(parsed, STRING8("/quit"))) {
+      printf("bye!\n");
+      break;
+    }
   }
 
   arena_destroy(arena);
   http_client_destroy(&client);
   return 0;
-}
-
-String8 parse_query(int argc, char *argv[]) {
-  if (argc == 2) {
-    return (String8){ .data = argv[1], .length = strlen(argv[1]) };
-  }
-  return STRING8("hollow purple 1hr");
 }
