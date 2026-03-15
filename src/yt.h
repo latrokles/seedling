@@ -5,6 +5,7 @@
 
 #define JSON_MAX_DETPH 100
 #define YT_SEARCH_URL STRING8("https://www.youtube.com/youtubei/v1/search?key=None")
+#define YT_WATCH_URL  STRING8("https://www.youtube.com/watch?v=")
 
 enum YoutubeErrorCode {
   YT_SEARCH_OK,
@@ -18,6 +19,7 @@ typedef struct VideoData {
   String8 uid;
   String8 title;
   String8 length;
+  String8 url;
 } VideoData;
 
 typedef struct YoutubeSearchResponse {
@@ -215,8 +217,9 @@ static VideoData parse_video_data(json_object *video_renderer_json, MemoryArena 
   String8 id = get_video_id(video_renderer_json, arena);
   String8 title = get_title(video_renderer_json, arena);
   String8 length = get_length(video_renderer_json, arena);
+  String8 url = string8_concat(YT_WATCH_URL, id, arena);
 
-  return (VideoData) { .uid = id, .title = title, .length = length };
+  return (VideoData) { .uid = id, .title = title, .length = length, .url = url };
 }
 
 static String8 get_video_id(json_object *video_renderer_json, MemoryArena *arena) {

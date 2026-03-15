@@ -30,6 +30,7 @@ int main(int argc, char *argv[]) {
 
     // TODO unpack this better
     printf("index=%zu: %s\t%s\t%s\n", i, video.uid.data, video.length.data, video.title.data);
+    printf("\t-- %s\n", video.url.data);
   }
 
   arena_destroy(arena);
