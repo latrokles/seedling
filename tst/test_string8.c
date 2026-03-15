@@ -52,6 +52,25 @@ TEST(String8Tests, string8_concat_returns_a_new_string_joining_lhs_and_rhs) {
   arena_destroy(arena);
 }
 
+TEST(String8Tests, string8_join_returns_value_if_only_one_value_is_passed) {
+  MemoryArena *arena = arena_create(sizeof(char) * 100);
+
+  String8 sep = STRING8(", ");
+  String8 joined = string8_join(arena, sep, 1, STRING8("foo"));
+  TEST_ASSERT_EQUAL_STRING("foo", joined.data);
+
+  arena_destroy(arena);
+}
+
+TEST(String8Tests, string8_join_returns_the_merge_of_its_arguments_with_separator) {
+  MemoryArena *arena = arena_create(sizeof(char) * 100);
+  String8 sep = STRING8(", ");
+  String8 joined = string8_join(arena, sep, 3, STRING8("foo"), STRING8("bar"), STRING8("baz"));
+
+  TEST_ASSERT_EQUAL_STRING("foo, bar, baz", joined.data);
+  arena_destroy(arena);
+}
+
 TEST(String8Tests, string8_substringfrom_returns_slice_from_start_index_to_end_of_s) {
   String8 substring = string8_substringfrom(STRING8("foobar"), 3);
   TEST_ASSERT_TRUE(string8_equals(substring, STRING8("bar")));

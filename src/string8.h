@@ -13,6 +13,7 @@
 #ifndef __STRING8_H__
 #define __STRING8_H__
 
+#include <stdarg.h>
 #include <stdbool.h>
 #include <string.h>
 
@@ -36,6 +37,7 @@ typedef struct String8Buffer {
 String8 string8_from_charbuf(char *buf, u64 length, MemoryArena *arena);
 String8 string8_clone(String8 s, MemoryArena *arena);
 String8 string8_concat(String8 lhs, String8 rhs, MemoryArena *arena);
+String8 string8_join(MemoryArena *arena, String8 separator, usize count, String8 first, ...);
 String8 string8_substringfrom(String8 s, u64 start_index);
 char string8_get(String8 s, usize index);
 size string8_compare(String8 lhs, String8 rhs);
@@ -83,13 +85,6 @@ String8 string8_clone(String8 s, MemoryArena *arena) {
   return new_str;
 }
 
-char string8_get(String8 s, usize index) {
-  if (index >= s.length) {
-    return -1;
-  }
-  return s.data[index];
-}
-
 String8 string8_concat(String8 lhs, String8 rhs, MemoryArena *arena) {
   u64 new_length = lhs.length + rhs.length;
 
@@ -104,6 +99,55 @@ String8 string8_concat(String8 lhs, String8 rhs, MemoryArena *arena) {
     memcpy(p, rhs.data, rhs.length);  // copy rhs string data
   }
   return new_str;
+}
+
+// this may be better taking a collection of string8 values
+String8 string8_join(MemoryArena *arena, String8 separator, usize count, String8 first, ...) {
+  if (count == 0) { return STRING8(""); }
+  if (count == 1) { return first; }
+
+  // refer to:
+  // - `man 3 stdarg`
+  // - https://dev.to/pauljlucas/variadic-functions-in-c-53ml
+  va_list values;
+  va_start(values, first);
+
+  String8 strings[count];
+  strings[0] = first;
+
+  // we know that the separator will be added between the strings being
+  // joined, but won't be added after the last item. i.e. count - 1 times.
+  u64 total_length = first.length + separator.length * (count - 1);
+  for (usize i = 1; i < count; i++) {
+    String8 s = va_arg(values, String8);
+    total_length += s.length;
+    strings[i] = s;
+  }
+  va_end(values);
+
+  String8 new_str = { .length = total_length };
+  new_str.data = (char *)arena_push(arena, total_length, false);
+
+  char *p = new_str.data;
+  for (usize i = 0; i < count; i++) {
+    memcpy(p, strings[i].data, strings[i].length);
+    p += strings[i].length;
+
+    // skip the separator on the last item
+    if (i == (count - 1)) { continue; }
+
+    // else add separator
+    memcpy(p, separator.data, separator.length);
+    p += separator.length;
+  }
+  return new_str;
+}
+
+char string8_get(String8 s, usize index) {
+  if (index >= s.length) {
+    return -1;
+  }
+  return s.data[index];
 }
 
 /*

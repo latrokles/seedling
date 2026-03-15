@@ -8,6 +8,8 @@ TEST_GROUP_RUNNER(String8Tests) {
   RUN_TEST_CASE(String8Tests, string8_from_charbuf_creates_an_arena_allocated_string8_from_char_buffer);
   RUN_TEST_CASE(String8Tests, string8_clone_copies_string8);
   RUN_TEST_CASE(String8Tests, string8_concat_returns_a_new_string_joining_lhs_and_rhs);
+  RUN_TEST_CASE(String8Tests, string8_join_returns_value_if_only_one_value_is_passed);
+  RUN_TEST_CASE(String8Tests, string8_join_returns_the_merge_of_its_arguments_with_separator);
   RUN_TEST_CASE(String8Tests, string8_substringfrom_returns_slice_from_start_index_to_end_of_s);
   RUN_TEST_CASE(String8Tests, string8_substringfrom_returns_empty_string_when_start_index_is_out_of_bounds);
   RUN_TEST_CASE(String8Tests, string8_get_returns_char_at_index);
