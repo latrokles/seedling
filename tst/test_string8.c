@@ -41,6 +41,17 @@ TEST(String8Tests, string8_clone_copies_string8) {
   arena_destroy(arena);
 }
 
+TEST(String8Tests, string8_concat_returns_a_new_string_joining_lhs_and_rhs) {
+  MemoryArena *arena = arena_create(sizeof(char) * 100);
+
+  String8 lhs = STRING8("foo");
+  String8 rhs = STRING8("bar");
+
+  TEST_ASSERT_EQUAL_STRING("foobar", string8_concat(lhs, rhs, arena).data);
+
+  arena_destroy(arena);
+}
+
 TEST(String8Tests, string8_substringfrom_returns_slice_from_start_index_to_end_of_s) {
   String8 substring = string8_substringfrom(STRING8("foobar"), 3);
   TEST_ASSERT_TRUE(string8_equals(substring, STRING8("bar")));

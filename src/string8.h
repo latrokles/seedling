@@ -35,6 +35,7 @@ typedef struct String8Buffer {
 
 String8 string8_from_charbuf(char *buf, u64 length, MemoryArena *arena);
 String8 string8_clone(String8 s, MemoryArena *arena);
+String8 string8_concat(String8 lhs, String8 rhs, MemoryArena *arena);
 String8 string8_substringfrom(String8 s, u64 start_index);
 char string8_get(String8 s, usize index);
 size string8_compare(String8 lhs, String8 rhs);
@@ -87,6 +88,22 @@ char string8_get(String8 s, usize index) {
     return -1;
   }
   return s.data[index];
+}
+
+String8 string8_concat(String8 lhs, String8 rhs, MemoryArena *arena) {
+  u64 new_length = lhs.length + rhs.length;
+
+  String8 new_str = {};
+  new_str.data = (char *)arena_push(arena, new_length, false);
+  new_str.length = new_length;
+
+  char *p = new_str.data;
+  if (new_length) {
+    memcpy(p, lhs.data, lhs.length);  // copy lhs string data
+    p += lhs.length;                  // advance p to end of lhs data
+    memcpy(p, rhs.data, rhs.length);  // copy rhs string data
+  }
+  return new_str;
 }
 
 /*
