@@ -14,7 +14,7 @@ int main(int argc, char *argv[]) {
   HttpClient client = http_client_create();
   if (!client.created) { return -1; }
 
-  MemoryArena *arena = arena_create(sizeof(char) * 2000000);
+  MemoryArena *arena = arena_create(2000000);
   YoutubeSearchResponse response;
 
   char line[1024];
@@ -36,6 +36,7 @@ int main(int argc, char *argv[]) {
     }
 
     if (string8_startswith(parsed, STRING8("/search "))) {
+      arena_clear(arena);
       String8 query = string8_substringfrom(parsed, 8);
       response = yt_search(client, query, arena);
 

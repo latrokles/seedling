@@ -30,9 +30,7 @@ typedef struct String8Buffer {
   u64 capacity;
 } String8Buffer;
 
-// ******************************
-// |        DEFINITIONS         |
-// ******************************
+/* --- definitions ---*/
 
 String8 string8_from_charbuf(char *buf, u64 length, MemoryArena *arena);
 String8 string8_clone(String8 s, MemoryArena *arena);
@@ -45,16 +43,14 @@ bool string8_equals(String8 lhs, String8 rhs);
 bool string8_startswith(String8 s, String8 prefix);
 bool string8_endswith(String8 s, String8 suffix);
 
-/* TODO implement
-String8 String8_trim(String8 s);
-String8 String8_upcase(String8 s);
-String8 String8_downcase(String8 s);
+/*
+   TODO: implement `String8 string8_trim(String8 s)`
+   TODO: implement `String8 string8_upcase(String8 s)`
+   TODO: implement `String8 string8_downcase(String8 s)`
+   TODO: implement `String8 string8_replace(String8 s, String8 matching_text, String8 replacement)`
 */
 
-
-// ******************************
-// |      IMPLEMENTATIONS       |
-// ******************************
+/* --- implementation --- */
 
 /*
  * Creates and returns an arena allocated String8 value
@@ -62,11 +58,11 @@ String8 String8_downcase(String8 s);
  */
 String8 string8_from_charbuf(char *buf, u64 length, MemoryArena *arena) {
   String8 new_str = {};
-  new_str.data = (char*)arena_push(arena, length, false);
+  new_str.data = (char*)arena_push(arena, length + 1);
   new_str.length = length;
 
   if (length) {
-    memcpy(new_str.data, buf, length);
+    memcpy(new_str.data, buf, length + 1);
   }
   return new_str;
 }
@@ -76,11 +72,11 @@ String8 string8_from_charbuf(char *buf, u64 length, MemoryArena *arena) {
  */
 String8 string8_clone(String8 s, MemoryArena *arena) {
   String8 new_str = {};
-  new_str.data = (char *)arena_push(arena, s.length, false);
+  new_str.data = (char *)arena_push(arena, s.length + 1);  // + 1 to store the null terminator \0
   new_str.length = s.length;
 
   if (s.length) {
-    memcpy(new_str.data, s.data, s.length);
+    memcpy(new_str.data, s.data, s.length + 1);  // copying the null terminator
   }
   return new_str;
 }
@@ -89,14 +85,14 @@ String8 string8_concat(String8 lhs, String8 rhs, MemoryArena *arena) {
   u64 new_length = lhs.length + rhs.length;
 
   String8 new_str = {};
-  new_str.data = (char *)arena_push(arena, new_length, false);
+  new_str.data = (char *)arena_push(arena, new_length + 1);  // + 1 to store the null terminator of rhs
   new_str.length = new_length;
 
   char *p = new_str.data;
   if (new_length) {
-    memcpy(p, lhs.data, lhs.length);  // copy lhs string data
-    p += lhs.length;                  // advance p to end of lhs data
-    memcpy(p, rhs.data, rhs.length);  // copy rhs string data
+    memcpy(p, lhs.data, lhs.length);      // copy lhs string data
+    p += lhs.length;                      // advance p to end of lhs data
+    memcpy(p, rhs.data, rhs.length + 1);  // copy rhs string data along with the null terminator
   }
   return new_str;
 }
@@ -126,7 +122,7 @@ String8 string8_join(MemoryArena *arena, String8 separator, usize count, String8
   va_end(values);
 
   String8 new_str = { .length = total_length };
-  new_str.data = (char *)arena_push(arena, total_length, false);
+  new_str.data = (char *)arena_push(arena, total_length + 1); // + 1 to store the null terminator of the last string
 
   char *p = new_str.data;
   for (usize i = 0; i < count; i++) {
@@ -140,6 +136,7 @@ String8 string8_join(MemoryArena *arena, String8 separator, usize count, String8
     memcpy(p, separator.data, separator.length);
     p += separator.length;
   }
+  *p = 0; // set the null terminator on the joined string
   return new_str;
 }
 

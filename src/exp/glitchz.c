@@ -85,6 +85,7 @@ void run(VM *vm, int fps) {
   int running = true;
 
   redisplay(vm);
+  draw_pixels(vm);
 
   while (running) {
     int tick = SDL_GetTicks();
@@ -101,7 +102,7 @@ void run(VM *vm, int fps) {
 	break;
       }
     }
-    draw_pixels(vm);
+    //draw_pixels(vm);
     redisplay(vm);
   }
 }

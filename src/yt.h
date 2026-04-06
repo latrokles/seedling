@@ -46,7 +46,7 @@ YoutubeSearchResponse yt_search(HttpClient client, String8 query, MemoryArena *a
     STRING8("Content-Type: application/json")
   };
 
-  MemoryArena *scratch_arena = arena_create(sizeof(char) * 20000000);
+  MemoryArena *scratch_arena = arena_create(20000000);
   String8 body = prepare_request_body(query, scratch_arena);
   HttpRequest req = {
     .method = "POST",
@@ -200,7 +200,7 @@ static YoutubeSearchResponse parse_response(String8 body, MemoryArena *arena) {
     }
   }
 
-  VideoData *actual_videos = arena_push(arena, sizeof(VideoData) * video_count, false);
+  VideoData *actual_videos = arena_push(arena, sizeof(VideoData) * video_count);
   for (usize i = 0; i < video_count; i++) {
     actual_videos[i] = videos[i];
   }

@@ -5,6 +5,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 
+#define MIN(a, b) (((a) < (b)) ? (a) : (b))
 #define COUNTOF(a) (size)(sizeof(a) / sizeof(*(a)))
 #define LENGTHOF(s) (COUNTOF(s) - 1)
 #define NEW(type, numbytes) (type *)malloc(numbytes)

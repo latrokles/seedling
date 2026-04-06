@@ -6,6 +6,7 @@
 TEST_GROUP_RUNNER(String8Tests) {
   RUN_TEST_CASE(String8Tests, string8_creates_string8_struct);
   RUN_TEST_CASE(String8Tests, string8_from_charbuf_creates_an_arena_allocated_string8_from_char_buffer);
+  RUN_TEST_CASE(String8Tests, string8_creates_multiple_arena_allocated_string8_values);
   RUN_TEST_CASE(String8Tests, string8_clone_copies_string8);
   RUN_TEST_CASE(String8Tests, string8_concat_returns_a_new_string_joining_lhs_and_rhs);
   RUN_TEST_CASE(String8Tests, string8_join_returns_value_if_only_one_value_is_passed);

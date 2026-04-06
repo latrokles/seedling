@@ -7,11 +7,17 @@
 #include "arena.h"
 #include "string8.h"
 
+MemoryArena *arena;
+
 TEST_GROUP(String8Tests);
 
-TEST_SETUP(String8Tests) {}
+TEST_SETUP(String8Tests) {
+  arena = arena_create(100);
+}
 
-TEST_TEAR_DOWN(String8Tests) {}
+TEST_TEAR_DOWN(String8Tests) {
+  arena_destroy(arena);
+}
 
 TEST(String8Tests, string8_creates_string8_struct) {
   String8 s = STRING8("hello world");
@@ -21,54 +27,45 @@ TEST(String8Tests, string8_creates_string8_struct) {
 }
 
 TEST(String8Tests, string8_from_charbuf_creates_an_arena_allocated_string8_from_char_buffer) {
-  MemoryArena *arena = arena_create(sizeof(char) * 100);
-
   String8 s = string8_from_charbuf("foo", 3, arena);
-
   TEST_ASSERT_EQUAL_STRING(s.data, "foo");
+}
 
-  arena_destroy(arena);
+TEST(String8Tests, string8_creates_multiple_arena_allocated_string8_values) {
+  String8 s1 = string8_from_charbuf("foo", 3, arena);
+  String8 s2 = string8_from_charbuf("bar", 3, arena);
+  String8 s3 = string8_from_charbuf("baz", 3, arena);
+
+  TEST_ASSERT_EQUAL_STRING("foo", s1.data);
+  TEST_ASSERT_EQUAL_STRING("bar", s2.data);
+  TEST_ASSERT_EQUAL_STRING("baz", s3.data);
 }
 
 TEST(String8Tests, string8_clone_copies_string8) {
-  MemoryArena *arena = arena_create(sizeof(char) * 100);
-
   String8 s = STRING8("hello world");
   String8 copy = string8_clone(s, arena);
 
   TEST_ASSERT_EQUAL_STRING(s.data, copy.data);
-
-  arena_destroy(arena);
 }
 
 TEST(String8Tests, string8_concat_returns_a_new_string_joining_lhs_and_rhs) {
-  MemoryArena *arena = arena_create(sizeof(char) * 100);
-
   String8 lhs = STRING8("foo");
   String8 rhs = STRING8("bar");
 
   TEST_ASSERT_EQUAL_STRING("foobar", string8_concat(lhs, rhs, arena).data);
-
-  arena_destroy(arena);
 }
 
 TEST(String8Tests, string8_join_returns_value_if_only_one_value_is_passed) {
-  MemoryArena *arena = arena_create(sizeof(char) * 100);
-
   String8 sep = STRING8(", ");
   String8 joined = string8_join(arena, sep, 1, STRING8("foo"));
   TEST_ASSERT_EQUAL_STRING("foo", joined.data);
-
-  arena_destroy(arena);
 }
 
 TEST(String8Tests, string8_join_returns_the_merge_of_its_arguments_with_separator) {
-  MemoryArena *arena = arena_create(sizeof(char) * 100);
   String8 sep = STRING8(", ");
   String8 joined = string8_join(arena, sep, 3, STRING8("foo"), STRING8("bar"), STRING8("baz"));
 
   TEST_ASSERT_EQUAL_STRING("foo, bar, baz", joined.data);
-  arena_destroy(arena);
 }
 
 TEST(String8Tests, string8_substringfrom_returns_slice_from_start_index_to_end_of_s) {
