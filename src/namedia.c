@@ -58,7 +58,7 @@ int main(int argc, char *argv[]) {
 
       printf("Playing url=%s...\n", video_to_play.url.data);
       String8 video_arg = string8_join(arena, STRING8(""), 3, STRING8("'"), video_to_play.url, STRING8("'"));
-      system(string8_concat(STRING8("mpv "), video_arg, arena).data);
+      system(string8_concat(arena, STRING8("mpv "), video_arg).data);
     }
 
     if (string8_startswith(parsed, STRING8("/quit"))) {

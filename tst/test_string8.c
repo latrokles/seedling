@@ -27,14 +27,14 @@ TEST(String8Tests, string8_creates_string8_struct) {
 }
 
 TEST(String8Tests, string8_from_charbuf_creates_an_arena_allocated_string8_from_char_buffer) {
-  String8 s = string8_from_charbuf("foo", 3, arena);
+  String8 s = string8_from_charbuf(arena, "foo", 3);
   TEST_ASSERT_EQUAL_STRING(s.data, "foo");
 }
 
 TEST(String8Tests, string8_creates_multiple_arena_allocated_string8_values) {
-  String8 s1 = string8_from_charbuf("foo", 3, arena);
-  String8 s2 = string8_from_charbuf("bar", 3, arena);
-  String8 s3 = string8_from_charbuf("baz", 3, arena);
+  String8 s1 = string8_from_charbuf(arena, "foo", 3);
+  String8 s2 = string8_from_charbuf(arena, "bar", 3);
+  String8 s3 = string8_from_charbuf(arena, "baz", 3);
 
   TEST_ASSERT_EQUAL_STRING("foo", s1.data);
   TEST_ASSERT_EQUAL_STRING("bar", s2.data);
@@ -43,7 +43,7 @@ TEST(String8Tests, string8_creates_multiple_arena_allocated_string8_values) {
 
 TEST(String8Tests, string8_clone_copies_string8) {
   String8 s = STRING8("hello world");
-  String8 copy = string8_clone(s, arena);
+  String8 copy = string8_clone(arena, s);
 
   TEST_ASSERT_EQUAL_STRING(s.data, copy.data);
 }
@@ -52,7 +52,7 @@ TEST(String8Tests, string8_concat_returns_a_new_string_joining_lhs_and_rhs) {
   String8 lhs = STRING8("foo");
   String8 rhs = STRING8("bar");
 
-  TEST_ASSERT_EQUAL_STRING("foobar", string8_concat(lhs, rhs, arena).data);
+  TEST_ASSERT_EQUAL_STRING("foobar", string8_concat(arena, lhs, rhs).data);
 }
 
 TEST(String8Tests, string8_join_returns_value_if_only_one_value_is_passed) {

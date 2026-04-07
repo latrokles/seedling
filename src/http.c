@@ -78,7 +78,7 @@ HttpResponse http_post(HttpClient client, HttpRequest request, MemoryArena *aren
     return (HttpResponse){ .status = (usize)http_code };
   }
 
-  String8 body = string8_from_charbuf(chunk.memory, chunk.size, arena);
+  String8 body = string8_from_charbuf(arena, chunk.memory, chunk.size);
 
   free(chunk.memory);
   curl_easy_getinfo(client.curl, CURLINFO_RESPONSE_CODE, &http_code);

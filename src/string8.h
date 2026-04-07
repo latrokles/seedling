@@ -32,9 +32,9 @@ typedef struct String8Buffer {
 
 /* --- definitions ---*/
 
-String8 string8_from_charbuf(char *buf, u64 length, MemoryArena *arena);
-String8 string8_clone(String8 s, MemoryArena *arena);
-String8 string8_concat(String8 lhs, String8 rhs, MemoryArena *arena);
+String8 string8_from_charbuf(MemoryArena *arena, char *buf, u64 length);
+String8 string8_clone(MemoryArena *arena, String8 s);
+String8 string8_concat(MemoryArena *arena, String8 lhs, String8 rhs);
 String8 string8_join(MemoryArena *arena, String8 separator, usize count, String8 first, ...);
 String8 string8_substringfrom(String8 s, u64 start_index);
 char string8_get(String8 s, usize index);
@@ -56,7 +56,7 @@ bool string8_endswith(String8 s, String8 suffix);
  * Creates and returns an arena allocated String8 value
  * from `buf` with `length`.
  */
-String8 string8_from_charbuf(char *buf, u64 length, MemoryArena *arena) {
+String8 string8_from_charbuf(MemoryArena *arena, char *buf, u64 length) {
   String8 new_str = {};
   new_str.data = (char*)arena_push(arena, length + 1);
   new_str.length = length;
@@ -70,7 +70,7 @@ String8 string8_from_charbuf(char *buf, u64 length, MemoryArena *arena) {
 /*
  * Returns a copy of `s` allocated in `arena`.
  */
-String8 string8_clone(String8 s, MemoryArena *arena) {
+String8 string8_clone(MemoryArena *arena, String8 s) {
   String8 new_str = {};
   new_str.data = (char *)arena_push(arena, s.length + 1);  // + 1 to store the null terminator \0
   new_str.length = s.length;
@@ -81,7 +81,7 @@ String8 string8_clone(String8 s, MemoryArena *arena) {
   return new_str;
 }
 
-String8 string8_concat(String8 lhs, String8 rhs, MemoryArena *arena) {
+String8 string8_concat(MemoryArena *arena, String8 lhs, String8 rhs) {
   u64 new_length = lhs.length + rhs.length;
 
   String8 new_str = {};

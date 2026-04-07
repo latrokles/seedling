@@ -72,7 +72,7 @@ static String8 prepare_request_body(String8 query, MemoryArena *arena) {
   json_object_object_add(body, "query", json_object_new_string(query.data));
 
   char *jsonstr = (char *)json_object_to_json_string(body);
-  String8 req_body = string8_from_charbuf(jsonstr, strlen(jsonstr), arena);
+  String8 req_body = string8_from_charbuf(arena, jsonstr, strlen(jsonstr));
 
   json_object_put(body);
   return req_body;
@@ -217,7 +217,7 @@ static VideoData parse_video_data(json_object *video_renderer_json, MemoryArena 
   String8 id = get_video_id(video_renderer_json, arena);
   String8 title = get_title(video_renderer_json, arena);
   String8 length = get_length(video_renderer_json, arena);
-  String8 url = string8_concat(YT_WATCH_URL, id, arena);
+  String8 url = string8_concat(arena, YT_WATCH_URL, id);
 
   return (VideoData) { .uid = id, .title = title, .length = length, .url = url };
 }
@@ -234,7 +234,7 @@ static String8 get_video_id(json_object *video_renderer_json, MemoryArena *arena
     return STRING8("");
   }
 
-  return string8_from_charbuf(id, strlen(id), arena);
+  return string8_from_charbuf(arena, id, strlen(id));
 }
 
 static String8 get_title(json_object *video_renderer_json, MemoryArena *arena) {
@@ -260,7 +260,7 @@ static String8 get_title(json_object *video_renderer_json, MemoryArena *arena) {
   }
 
   char *title = (char *)json_object_get_string(text_json);
-  return string8_from_charbuf(title, strlen(title), arena);
+  return string8_from_charbuf(arena, title, strlen(title));
 }
 
 static String8 get_length(json_object *video_renderer_json, MemoryArena *arena) {
@@ -275,7 +275,7 @@ static String8 get_length(json_object *video_renderer_json, MemoryArena *arena) 
   }
 
   char *length = (char *)json_object_get_string(simple_text);
-  return string8_from_charbuf(length, strlen(length), arena);
+  return string8_from_charbuf(arena, length, strlen(length));
 }
 
 #endif

@@ -17,7 +17,7 @@ String8 prepare_request_body(String8 query, MemoryArena *arena) {
   json_object_object_add(body, "query", json_object_new_string(query.data));
 
   char *jsonstr = (char *)json_object_to_json_string(body);
-  String8 req_body = string8_from_charbuf(jsonstr, strlen(jsonstr), arena);
+  String8 req_body = string8_from_charbuf(arena, jsonstr, strlen(jsonstr));
 
   json_object_put(body);
   return req_body;
