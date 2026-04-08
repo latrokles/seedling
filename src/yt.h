@@ -7,13 +7,24 @@
 #define YT_SEARCH_URL STRING8("https://www.youtube.com/youtubei/v1/search?key=None")
 #define YT_WATCH_URL  STRING8("https://www.youtube.com/watch?v=")
 
+char *search_request_body =
+  "{"
+  "  \"context\": {"
+  "	\"client\": {"
+  "	    \"clientName\": \"WEB\","
+  "	    \"clientVersion\": \"2.20210224.06.00\","
+  "	    \"newVisitorCookie\": true"
+  "	},"
+  "	\"user\": { \"lockedSafetyMode\": false }"
+  "  }"
+  "}";
+
 enum YoutubeErrorCode {
   YT_SEARCH_OK,
   YT_SEARCH_NONE,
   YT_SEARCH_ERROR,
   YT_SEARCH_PARSE_ERROR
 } YoutubeErrorCode;
-
 
 typedef struct VideoData {
   String8 uid;
@@ -68,7 +79,7 @@ YoutubeSearchResponse yt_search(HttpClient client, String8 query, MemoryArena *a
 }
 
 static String8 prepare_request_body(String8 query, MemoryArena *arena) {
-  json_object *body = json_object_from_file("data/youtube-search-request.json");
+  json_object *body = json_tokener_parse(search_request_body);
   json_object_object_add(body, "query", json_object_new_string(query.data));
 
   char *jsonstr = (char *)json_object_to_json_string(body);

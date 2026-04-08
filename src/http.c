@@ -47,7 +47,7 @@ String8 http_response_get_header(HttpResponse *resp, String8 header_name) {
 HttpResponse http_post(HttpClient client, HttpRequest request, MemoryArena *arena) {
   CURLcode code;
 
-  int http_code = 0;
+  long http_code = 0L;
   struct curl_slist *headers = NULL;
   Chunk chunk = { .memory = NULL, .size = 0 };
 
@@ -56,15 +56,15 @@ HttpResponse http_post(HttpClient client, HttpRequest request, MemoryArena *aren
     headers = curl_slist_append(headers, request.headers[header_idx].data);
   }
 
-  curl_easy_setopt(client.curl, CURLOPT_URL, request.uri);    // set url
-  curl_easy_setopt(client.curl, CURLOPT_HTTPHEADER, headers); // set headers
-  curl_easy_setopt(client.curl, CURLOPT_POSTFIELDS, request.body); // set POST method and body
-  curl_easy_setopt(client.curl, CURLOPT_WRITEFUNCTION, curl_callback); // set callback
-  curl_easy_setopt(client.curl, CURLOPT_WRITEDATA, &chunk);            // set pointer to response
-  curl_easy_setopt(client.curl, CURLOPT_TIMEOUT, 5);        // set timeout in seconds
-  curl_easy_setopt(client.curl, CURLOPT_FOLLOWLOCATION, 1); // follow redirects
-  curl_easy_setopt(client.curl, CURLOPT_MAXREDIRS, 1);      // max 1 redirect
-  curl_easy_setopt(client.curl, CURLOPT_USERAGENT, USER_AGENT); // set user agent
+  curl_easy_setopt(client.curl, CURLOPT_URL, request.uri.data);         // set url
+  curl_easy_setopt(client.curl, CURLOPT_HTTPHEADER, headers);           // set headers
+  curl_easy_setopt(client.curl, CURLOPT_POSTFIELDS, request.body.data); // set POST method and body
+  curl_easy_setopt(client.curl, CURLOPT_WRITEFUNCTION, curl_callback);  // set callback
+  curl_easy_setopt(client.curl, CURLOPT_WRITEDATA, &chunk);             // set pointer to response
+  curl_easy_setopt(client.curl, CURLOPT_TIMEOUT, 5L);                   // set timeout in seconds
+  curl_easy_setopt(client.curl, CURLOPT_FOLLOWLOCATION, 1L);            // follow redirects
+  curl_easy_setopt(client.curl, CURLOPT_MAXREDIRS, 1L);                 // max 1 redirect
+  curl_easy_setopt(client.curl, CURLOPT_USERAGENT, USER_AGENT);         // set user agent
   // TODO: conditional set CURLOPT_VERBOSE if in debug mode
 
   code = curl_easy_perform(client.curl);
