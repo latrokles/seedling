@@ -4,10 +4,4 @@
 *.out
 target
 bin
-build/*.profraw
-build/*.profdata
-build/*.out
-build/coverage.info
-build/coverage.filtered.info
-build/coverage/*
-build/*.dSYM
+build
