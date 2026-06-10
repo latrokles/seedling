@@ -24,7 +24,7 @@ typedef struct Runtime {
   bool mouse_m;
   bool mouse_r;
 
-  u64 fps;
+  u32 fps;
   u64 next_tick;
   bool is_executing;
   bool is_updated;
@@ -92,8 +92,8 @@ Runtime runtime_create(MemoryArena *arena, String8 title, Point position, i64 wi
     .mouse_l = false,
     .mouse_m = false,
     .mouse_r = false,
-    .fps = 30ULL,
-    .next_tick = 0ULL,
+    .fps = 30L,
+    .next_tick = 0L,
     .is_executing = false,
     .is_updated = false,
     .screen = screen,
