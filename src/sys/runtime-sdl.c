@@ -9,17 +9,17 @@ typedef struct Runtime {
   String8 title;
   Point pos;
 
-  i64 width;
-  i64 height;
+  i32 width;
+  i32 height;
   u32 zoom;
 
   int keys[256];
   int mod;
 
-  i64 mouse_x;
-  i64 mouse_y;
-  i64 mouse_px;
-  i64 mouse_py;
+  i32 mouse_x;
+  i32 mouse_y;
+  i32 mouse_px;
+  i32 mouse_py;
   bool mouse_l;
   bool mouse_m;
   bool mouse_r;
@@ -27,6 +27,7 @@ typedef struct Runtime {
   u32 fps;
   u64 next_tick;
   bool is_executing;
+  bool needs_redisplay;
   bool is_updated;
 
   Bitmap screen;
@@ -36,7 +37,7 @@ typedef struct Runtime {
 } Runtime;
 
 
-Runtime runtime_create(MemoryArena *arena, String8 title, Point position, i64 width, i64 height, u32 zoom);
+Runtime runtime_create(MemoryArena *arena, String8 title, Point position, i32 width, i32 height, u32 zoom);
 
 void runtime_start(Runtime *runtime);
 void runtime_update(Runtime *runtime);
@@ -49,7 +50,7 @@ void _mouse_down(Runtime *runtime, SDL_Event event);
 void _mouse_up(Runtime *runtime, SDL_Event event);
 void _mouse_pos(Runtime *runtime, SDL_Event event);
 
-Runtime runtime_create(MemoryArena *arena, String8 title, Point position, i64 width, i64 height, u32 zoom) {
+Runtime runtime_create(MemoryArena *arena, String8 title, Point position, i32 width, i32 height, u32 zoom) {
   if (SDL_Init(SDL_INIT_VIDEO) < 0) {
     fprintf(stderr, "Unable to initialize SDL backend, error=%s\n", SDL_GetError());
     assert(false);
@@ -92,9 +93,10 @@ Runtime runtime_create(MemoryArena *arena, String8 title, Point position, i64 wi
     .mouse_l = false,
     .mouse_m = false,
     .mouse_r = false,
-    .fps = 30L,
+    .fps = 60L,
     .next_tick = 0L,
     .is_executing = false,
+    .needs_redisplay = true,
     .is_updated = false,
     .screen = screen,
     .window = window,
@@ -148,6 +150,8 @@ void runtime_stop(Runtime *runtime) {
 }
 
 void runtime_redisplay(Runtime *runtime) {
+  if (!runtime->needs_redisplay) return;
+
   SDL_UpdateTexture(runtime->texture,
 		    NULL,
 		    runtime->screen.pixels,
@@ -156,6 +160,7 @@ void runtime_redisplay(Runtime *runtime) {
   SDL_RenderClear(runtime->renderer);
   SDL_RenderCopy(runtime->renderer, runtime->texture, NULL, NULL);
   SDL_RenderPresent(runtime->renderer);
+  runtime->needs_redisplay = false;
 }
 
 void runtime_destroy(Runtime *runtime) {
@@ -179,6 +184,7 @@ void _mouse_down(Runtime *runtime, SDL_Event event) {
   default:
     break;
   }
+  runtime->needs_redisplay = true;
 }
 
 void _mouse_up(Runtime *runtime, SDL_Event event) {
@@ -195,6 +201,7 @@ void _mouse_up(Runtime *runtime, SDL_Event event) {
   default:
     break;
   }
+  runtime->needs_redisplay = true;
 }
 
 void _mouse_pos(Runtime *runtime, SDL_Event event) {
@@ -202,4 +209,5 @@ void _mouse_pos(Runtime *runtime, SDL_Event event) {
   runtime->mouse_py = runtime->mouse_y;
   runtime->mouse_x = event.motion.x;
   runtime->mouse_y = event.motion.y;
+  runtime->needs_redisplay = true;
 }
