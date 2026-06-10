@@ -68,11 +68,10 @@ else ifeq ($(CC), gcc)
 endif
 
 # binaries
-BINARIES = namedia
+BINARIES = graffiti namedia
 
 ## targets
 .PHONY: all clean install make-build-dir test
-
 
 all: make-build-dir
 	@for bin in $(BINARIES); do \
