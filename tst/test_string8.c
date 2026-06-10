@@ -4,8 +4,6 @@
 #include "unity_fixture.h"
 
 #include "base.h"
-#include "arena.h"
-#include "string8.h"
 
 MemoryArena *arena;
 

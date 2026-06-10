@@ -8,8 +8,6 @@
 #include "unity_fixture.h"
 
 #include "base.h"
-#include "arena.h"
-#include "string8.h"
 #include "http.h"
 #include "http.c"
 
