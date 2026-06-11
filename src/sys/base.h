@@ -79,6 +79,7 @@ MemoryArena *arena_create(u64 capacity);
 void arena_destroy(MemoryArena *arena);
 void *arena_push(MemoryArena *arena, u64 size);
 void *arena_push_nozero(MemoryArena *arena, u64 size);
+void *arena_grow(MemoryArena *arena, void *old_ptr, u64 old_size, u64 new_size);
 void arena_pop(MemoryArena *arena, u64 size);
 void arena_pop_to(MemoryArena *arena, u64 pos);
 void arena_clear(MemoryArena *arena);
@@ -116,6 +117,28 @@ void *arena_push_nozero(MemoryArena *arena, u64 size) {
   arena->position += size;
 
   return data;
+}
+
+/* grow the topmost allocation */
+void *arena_grow(MemoryArena *arena, void *old_ptr, u64 old_size, u64 new_size) {
+  // case 1: old_ptr is null so we treat it as a new allocation.
+  if (old_ptr == NULL) {
+    return arena_push(arena, new_size);
+  }
+
+  // case 2: old_ptr points to the top most allocation, we extend it
+  if (old_ptr == arena->position - old_size) {
+    u64 new_position = arena->position - old_size + new_size;
+    assert(new_position < arena->capacity);
+
+    arena->position = new_position;
+    return old_ptr;
+  }
+
+  // case 3: old_ptr does not point to the top most position, copy data over with updated size
+  void *new_ptr = arena_push(arena, new_size);
+  memcpy(old_ptr, new_ptr, old_size);
+  return new_ptr;
 }
 
 void arena_pop(MemoryArena *arena, u64 size) {
