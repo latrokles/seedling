@@ -477,8 +477,8 @@ bool string8_endswith(String8 s, String8 suffix) {
 
 /* --- 2D conveniences --- */
 typedef struct Point {
-  i64 x;
-  i64 y;
+  i32 x;
+  i32 y;
 } Point;
 
 typedef struct Rect {

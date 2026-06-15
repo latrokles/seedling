@@ -8,7 +8,7 @@
 
 #include "base.h"
 #include "runtime-sdl.c"
-#include "draw.h"
+#include "draw2.h"
 
 #define WIDTH 600
 #define HEIGHT 400
@@ -24,11 +24,15 @@ Point     *point_list_get(PointList *list, u64 index);
 void       point_list_add(MemoryArena *arena, PointList *list, Point *p);
 void       point_list_clear(PointList *list);
 
-void draw_points(Bitmap *pen, Bitmap *surface, PointList *points) {
-  for(u64 i=0; i < points->length; i++) {
-    Point *p = point_list_get(points, i);
-    printf("drawing point {%ld, %ld}\n", p->x, p->y);
-    bitblt(pen, surface, bitmap_rect(pen), (Point){p->x, p->y}, DRAWOP_STORE);
+void on_mouse_down(Runtime *runtime) {
+  if (runtime->mouse_r) {
+    bitmap_clear(&(runtime->screen));
+  }
+}
+
+void on_mouse_motion(Runtime *runtime) {
+  if (runtime->mouse_l) {
+    draw_line(&(runtime->screen), runtime->mouse_prev, runtime->mouse_curr, PALETTE_YELLOW);
   }
 }
 
@@ -42,37 +46,9 @@ int main(void) {
 				   HEIGHT,
 				   1);
 
+  runtime.on_mouse_down = on_mouse_down;
+  runtime.on_mouse_motion = on_mouse_motion;
   runtime_start(&runtime);
-  Bitmap p = bitmap_create(arena, 1, 1);
-  bitmap_fill(&p, PALETTE_PALE_YELLOW);
-
-  Bitmap point_pen = bitmap_create(arena, 10, 10);
-  bitmap_fill(&point_pen, PALETTE_PALE_YELLOW);
-
-  PointList points = point_list_create(arena, 600);
-  Point p0 = {};
-  Point p1 = {};
-  while (runtime.is_executing) {
-    runtime_update(&runtime);
-    if (runtime.mouse_l) {
-      p0.x = runtime.mouse_px;
-      p0.y = runtime.mouse_py;
-      p1.x = runtime.mouse_x;
-      p1.y = runtime.mouse_y;
-
-      //point_list_add(arena, &points, &(Point){runtime.mouse_x, runtime.mouse_y});
-      //draw_points(&point_pen, &(runtime.screen), &points);
-      draw_line(&p, &(runtime.screen), p0, p1, DRAWOP_STORE);
-      runtime_redisplay(&runtime);
-    }
-
-    if (runtime.mouse_r) {
-      point_list_clear(&points);
-      bitmap_fill(&(runtime.screen), PALETTE_BLACK);
-      runtime_redisplay(&runtime);
-    }
-
-  }
 
   runtime_destroy(&runtime);
   arena_destroy(arena);

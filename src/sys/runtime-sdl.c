@@ -3,9 +3,11 @@
 
 #include <SDL.h>
 
-#include "draw.h"
+#include "base.h"
+#include "draw2.h"
 
-typedef struct Runtime {
+typedef struct Runtime Runtime;
+struct Runtime {
   String8 title;
   Point pos;
 
@@ -16,25 +18,27 @@ typedef struct Runtime {
   int keys[256];
   int mod;
 
-  i32 mouse_x;
-  i32 mouse_y;
-  i32 mouse_px;
-  i32 mouse_py;
+  Point mouse_curr;
+  Point mouse_prev;
+
   bool mouse_l;
   bool mouse_m;
   bool mouse_r;
 
   u32 fps;
-  u64 next_tick;
   bool is_executing;
   bool needs_redisplay;
-  bool is_updated;
 
   Bitmap screen;
   SDL_Window   *window;
   SDL_Renderer *renderer;
   SDL_Texture  *texture;
-} Runtime;
+
+  void *context;
+  void (*on_mouse_down)(Runtime *);
+  void (*on_mouse_up)(Runtime *);
+  void (*on_mouse_motion)(Runtime *);
+};
 
 
 Runtime runtime_create(MemoryArena *arena, String8 title, Point position, i32 width, i32 height, u32 zoom);
@@ -46,6 +50,8 @@ void runtime_stop(Runtime *runtime);
 void runtime_redisplay(Runtime *runtime);
 void runtime_destroy(Runtime *runtime);
 
+void _run(Runtime *runtime);
+void _step(Runtime *runtime);
 void _mouse_down(Runtime *runtime, SDL_Event event);
 void _mouse_up(Runtime *runtime, SDL_Event event);
 void _mouse_pos(Runtime *runtime, SDL_Event event);
@@ -86,18 +92,12 @@ Runtime runtime_create(MemoryArena *arena, String8 title, Point position, i32 wi
     .height = height,
     .zoom = zoom,
     .mod = 0,
-    .mouse_x = 0,
-    .mouse_y = 0,
-    .mouse_px = 0,
-    .mouse_py = 0,
     .mouse_l = false,
     .mouse_m = false,
     .mouse_r = false,
-    .fps = 60L,
-    .next_tick = 0L,
+    .fps = 60,
     .is_executing = false,
     .needs_redisplay = true,
-    .is_updated = false,
     .screen = screen,
     .window = window,
     .renderer = renderer,
@@ -109,40 +109,7 @@ Runtime runtime_create(MemoryArena *arena, String8 title, Point position, i32 wi
 void runtime_start(Runtime *runtime) {
   runtime->is_executing = true;
   runtime_redisplay(runtime);
-}
-
-void runtime_update(Runtime *runtime) {
-  u64 tick = SDL_GetTicks64();
-  if (tick < runtime->next_tick){
-    SDL_Delay(runtime->next_tick - tick);
-  }
-  u64 millis_per_frame = (u64)(1000.0 / runtime->fps);
-  runtime->next_tick = tick + millis_per_frame;
-
-  SDL_Event event;
-  while (SDL_PollEvent(&event) != 0) {
-    switch(event.type) {
-    case SDL_QUIT:
-      runtime_stop(runtime);
-      break;
-    case SDL_MOUSEBUTTONDOWN:
-      _mouse_down(runtime, event);
-      break;
-    case SDL_MOUSEBUTTONUP:
-      _mouse_up(runtime, event);
-      break;
-    case SDL_MOUSEMOTION:
-      _mouse_pos(runtime, event);
-      break;
-    case SDL_WINDOWEVENT:
-      if (event.window.event == SDL_WINDOWEVENT_FOCUS_GAINED) {
-	runtime_redisplay(runtime);
-      }
-      break;
-    default:
-      break;
-    }
-  }
+  _run(runtime);
 }
 
 void runtime_stop(Runtime *runtime) {
@@ -150,8 +117,6 @@ void runtime_stop(Runtime *runtime) {
 }
 
 void runtime_redisplay(Runtime *runtime) {
-  if (!runtime->needs_redisplay) return;
-
   SDL_UpdateTexture(runtime->texture,
 		    NULL,
 		    runtime->screen.pixels,
@@ -170,6 +135,58 @@ void runtime_destroy(Runtime *runtime) {
   SDL_DestroyWindow(runtime->window);
 }
 
+void _run(Runtime *runtime) {
+  f64 frame_delay = (f64)1000 / runtime->fps;
+
+  while (runtime->is_executing) {
+    u64 frame_start = SDL_GetTicks64();
+    _step(runtime);
+    u64 frame_end = SDL_GetTicks64();
+    u64 frame_time = frame_end - frame_start;
+    if (frame_delay > frame_time) {
+      if (frame_time > 16) {
+	printf("frame took %lu ms.\n", frame_time);
+      }
+      SDL_Delay(frame_delay - frame_time);
+    }
+  }
+}
+
+void _step(Runtime *runtime) {
+  if (runtime->needs_redisplay) {
+    runtime_redisplay(runtime);
+  }
+
+  SDL_Event event;
+  while (SDL_PollEvent(&event) !=0) {
+    switch(event.type) {
+    case SDL_QUIT:
+      runtime_stop(runtime);
+      break;
+    case SDL_MOUSEBUTTONDOWN:
+      _mouse_down(runtime, event);
+      runtime->needs_redisplay = true;
+      break;
+    case SDL_MOUSEBUTTONUP:
+      _mouse_up(runtime, event);
+      runtime->needs_redisplay = true;
+      break;
+    case SDL_MOUSEMOTION:
+      _mouse_pos(runtime, event);
+      runtime->needs_redisplay = true;
+      break;
+    case SDL_WINDOWEVENT:
+      if (event.window.event == SDL_WINDOWEVENT_FOCUS_GAINED) {
+        runtime->needs_redisplay = true;
+      }
+      break;
+    default:
+      break;
+    }
+  }
+
+}
+
 void _mouse_down(Runtime *runtime, SDL_Event event) {
   switch(event.button.button) {
   case SDL_BUTTON_LEFT:
@@ -184,7 +201,10 @@ void _mouse_down(Runtime *runtime, SDL_Event event) {
   default:
     break;
   }
-  runtime->needs_redisplay = true;
+
+  if (runtime->on_mouse_down) {
+    runtime->on_mouse_down(runtime);
+  }
 }
 
 void _mouse_up(Runtime *runtime, SDL_Event event) {
@@ -201,13 +221,19 @@ void _mouse_up(Runtime *runtime, SDL_Event event) {
   default:
     break;
   }
-  runtime->needs_redisplay = true;
+
+  if (runtime->on_mouse_up) {
+    runtime->on_mouse_up(runtime);
+  }
 }
 
 void _mouse_pos(Runtime *runtime, SDL_Event event) {
-  runtime->mouse_px = runtime->mouse_x;
-  runtime->mouse_py = runtime->mouse_y;
-  runtime->mouse_x = event.motion.x;
-  runtime->mouse_y = event.motion.y;
-  runtime->needs_redisplay = true;
+  runtime->mouse_prev.x = runtime->mouse_curr.x;
+  runtime->mouse_prev.y = runtime->mouse_curr.y;
+  runtime->mouse_curr.x = event.motion.x;
+  runtime->mouse_curr.y = event.motion.y;
+
+  if (runtime->on_mouse_motion) {
+    runtime->on_mouse_motion(runtime);
+  }
 }
