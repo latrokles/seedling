@@ -62,6 +62,7 @@ Bitmap bitmap_create(MemoryArena *arena, i32 width, i32 height);
 Rect   bitmap_rect(Bitmap *b);
 Color  bitmap_get_pixel(Bitmap *b, i32 x, i32 y);
 void   bitmap_set_pixel(Bitmap *b, i32 x, i32 y, Color color);
+void   bitmap_clear(Bitmap *b);
 void   bitmap_fill(Bitmap *b, Color color);
 
 void draw_line(Bitmap *brush, Bitmap *dst, Point from, Point to, DrawOp op);
@@ -104,9 +105,28 @@ void   bitmap_set_pixel(Bitmap *b, i32 x, i32 y, Color color) {
   b->pixels[index] = color;
 }
 
+void   bitmap_clear(Bitmap *b) {
+  memset(b->pixels, 0, b->w * b->h * sizeof(Color));
+}
+
 void   bitmap_fill(Bitmap *b, Color color) {
-  for (i32 i=0; i< (b->w * b->h); i++) {
-    b->pixels[i] = color;
+  // this used to be a single loop, but it was close to 20x slower than
+  // the bitmap_clear implementation.
+  // even with loop unrolling i only managed to get it to 20x slower than
+  // bitmap_clear.
+  //
+  // can't say i'm super into this, but it's comparable in performance to
+  // bitmap_clear. a bit slower, but on the same order of magnitude.
+
+  // fill one row with color
+  i32 row[b->w];
+  for (i32 x=0; x < b->w; x++) {
+    row[x] = color;
+  }
+
+  // memcopy it to every row
+  for (i32 y=0; y < b->h; y++) {
+    memcpy(b->pixels + (b->w * y), row, b->w * sizeof(Color));
   }
 }
 

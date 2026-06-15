@@ -7,8 +7,8 @@
 #include <stdbool.h>
 
 #include "base.h"
+#include "draw.h"
 #include "runtime-sdl.c"
-#include "draw2.h"
 
 #define WIDTH 600
 #define HEIGHT 400
@@ -24,20 +24,28 @@ Point     *point_list_get(PointList *list, u64 index);
 void       point_list_add(MemoryArena *arena, PointList *list, Point *p);
 void       point_list_clear(PointList *list);
 
+typedef struct Graffiti {
+  Bitmap pen;
+} Graffiti;
+
 void on_mouse_down(Runtime *runtime) {
   if (runtime->mouse_r) {
-    bitmap_clear(&(runtime->screen));
+    bitmap_fill(&(runtime->screen), PALETTE_BLACK);
   }
 }
 
 void on_mouse_motion(Runtime *runtime) {
   if (runtime->mouse_l) {
-    draw_line(&(runtime->screen), runtime->mouse_prev, runtime->mouse_curr, PALETTE_YELLOW);
+    Bitmap pen = ((Graffiti *)runtime->context)->pen;
+    draw_line(&pen, &(runtime->screen), runtime->mouse_prev, runtime->mouse_curr, DRAWOP_STORE);
   }
 }
 
 int main(void) {
   MemoryArena *arena = arena_create(200 * MB);
+
+  Bitmap pen = bitmap_create(arena, 10, 10);
+  bitmap_fill(&pen, PALETTE_YELLOW);
 
   Runtime runtime = runtime_create(arena,
 				   STRING8("graffiti"),
@@ -46,6 +54,9 @@ int main(void) {
 				   HEIGHT,
 				   1);
 
+  Graffiti g = { .pen = pen };
+
+  runtime.context = (void *)&g;
   runtime.on_mouse_down = on_mouse_down;
   runtime.on_mouse_motion = on_mouse_motion;
   runtime_start(&runtime);
