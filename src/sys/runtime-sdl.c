@@ -4,7 +4,7 @@
 #include <SDL.h>
 
 #include "base.h"
-#include "draw2.h"
+#include "draw.h"
 
 typedef struct Runtime Runtime;
 struct Runtime {
