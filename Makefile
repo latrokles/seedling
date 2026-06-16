@@ -68,7 +68,7 @@ else ifeq ($(CC), gcc)
 endif
 
 # binaries
-BINARIES = graffiti namedia
+BINARIES = graffiti randomwalk namedia
 
 ## targets
 .PHONY: all clean install make-build-dir test

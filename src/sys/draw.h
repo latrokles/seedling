@@ -11,21 +11,6 @@
 
 typedef uint32_t Color;
 
-typedef struct Bitmap {
-  i32 w;
-  i32 h;
-  Color *pixels;
-} Bitmap;
-
-typedef enum {
-  DRAWOP_STORE,        // dst = src
-  DRAWOP_STORE_INVERT, // dst = ~src
-  DRAWOP_OR,           // dst = dst | src
-  DRAWOP_AND,          // dst = dst & src
-  DRAWOP_XOR,          // dst = dst ^ src
-  DRAWOP_CLR,          // dst = dst & ~src
-} DrawOp;
-
 typedef enum Palette {
   PALETTE_OPAQUE          = 0xFFFFFFFF,
   PALETTE_TRANSPARENT     = 0x00000000,
@@ -57,6 +42,21 @@ typedef enum Palette {
   PALETTE_NOT_A_COLOR     = 0xFFFFFF00,
   PALETTE_NO_FILL         = PALETTE_NOT_A_COLOR,
 } Palette;
+
+typedef struct Bitmap {
+  i32 w;
+  i32 h;
+  Color *pixels;
+} Bitmap;
+
+typedef enum {
+  DRAWOP_STORE,        // dst = src
+  DRAWOP_STORE_INVERT, // dst = ~src
+  DRAWOP_OR,           // dst = dst | src
+  DRAWOP_AND,          // dst = dst & src
+  DRAWOP_XOR,          // dst = dst ^ src
+  DRAWOP_CLR,          // dst = dst & ~src
+} DrawOp;
 
 Bitmap bitmap_create(MemoryArena *arena, i32 width, i32 height);
 Rect   bitmap_rect(Bitmap *b);
@@ -310,6 +310,9 @@ void __merge(Bitmap *src, Bitmap *dst, i32 src_x, i32 src_y, i32 dst_x, i32 dst_
       case DRAWOP_STORE:
 	dst->pixels[dst_i] = src->pixels[src_i];
         break;
+      case DRAWOP_STORE_INVERT:
+	dst->pixels[dst_i] = ~src->pixels[src_i];
+	break;
       case DRAWOP_OR:
 	dst->pixels[dst_i] |= src->pixels[src_i];
         break;

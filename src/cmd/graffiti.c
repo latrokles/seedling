@@ -10,8 +10,8 @@
 #include "draw.h"
 #include "runtime-sdl.c"
 
-#define WIDTH 600
-#define HEIGHT 400
+#define WIDTH 800
+#define HEIGHT 600
 
 typedef struct PointList {
   Point **points;
@@ -27,19 +27,6 @@ void       point_list_clear(PointList *list);
 typedef struct Graffiti {
   Bitmap pen;
 } Graffiti;
-
-void on_mouse_down(Runtime *runtime) {
-  if (runtime->mouse_r) {
-    bitmap_fill(&(runtime->screen), PALETTE_BLACK);
-  }
-}
-
-void on_mouse_motion(Runtime *runtime) {
-  if (runtime->mouse_l) {
-    Bitmap pen = ((Graffiti *)runtime->context)->pen;
-    draw_line(&pen, &(runtime->screen), runtime->mouse_prev, runtime->mouse_curr, DRAWOP_STORE);
-  }
-}
 
 int main(void) {
   MemoryArena *arena = arena_create(200 * MB);
@@ -65,6 +52,18 @@ int main(void) {
   arena_destroy(arena);
 }
 
+void on_mouse_down(Runtime *runtime) {
+  if (runtime->mouse_r) {
+    bitmap_fill(&(runtime->screen), PALETTE_BLACK);
+  }
+}
+
+void on_mouse_motion(Runtime *runtime) {
+  if (runtime->mouse_l) {
+    Bitmap pen = ((Graffiti *)runtime->context)->pen;
+    draw_line(&pen, &(runtime->screen), runtime->mouse_prev, runtime->mouse_curr, DRAWOP_STORE);
+  }
+}
 
 PointList  point_list_create(MemoryArena *arena, u64 capacity) {
   Point **points = arena_push(arena, sizeof(Point*) * capacity);

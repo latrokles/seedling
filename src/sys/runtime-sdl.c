@@ -35,12 +35,20 @@ struct Runtime {
   SDL_Texture  *texture;
 
   void *context;
+  void (*on_step)(Runtime *);
   void (*on_mouse_down)(Runtime *);
   void (*on_mouse_up)(Runtime *);
   void (*on_mouse_motion)(Runtime *);
 };
 
 
+/* --- prototypes for runtime callbacks --- */
+void on_step(Runtime *runtime);
+void on_mouse_down(Runtime *runtime);
+void on_mouse_up(Runtime *runtime);
+void on_mouse_motion(Runtime *runtime);
+
+/* --- runtime prototypes --- */
 Runtime runtime_create(MemoryArena *arena, String8 title, Point position, i32 width, i32 height, u32 zoom);
 
 void runtime_start(Runtime *runtime);
@@ -155,6 +163,10 @@ void _run(Runtime *runtime) {
 void _step(Runtime *runtime) {
   if (runtime->needs_redisplay) {
     runtime_redisplay(runtime);
+  }
+
+  if (runtime->on_step) {
+    runtime->on_step(runtime);
   }
 
   SDL_Event event;
