@@ -26,6 +26,7 @@ SRC_SYS_DIR  = $(SRC_DIR)/sys
 SRC_INCLUDES = -I$(SRC_CMD_DIR) -I$(SRC_STD_DIR) -I$(SRC_SYS_DIR)
 
 # libs
+FT   = `pkg-config --cflags --libs freetype2`
 SDL2 = `sdl2-config --cflags --libs`
 JSON = `pkg-config --cflags --libs json-c`
 CURL = `pkg-config --cflags --libs libcurl`
@@ -68,14 +69,14 @@ else ifeq ($(CC), gcc)
 endif
 
 # binaries
-BINARIES = graffiti randomwalk namedia
+BINARIES = namedia graffiti randomwalk text
 
 ## targets
 .PHONY: all clean install make-build-dir test
 
 all: make-build-dir
 	@for bin in $(BINARIES); do \
-		$(CC) $(CFLAGS) $(DEBUG_FLAGS) $(SRC_INCLUDES) $(SRC_CMD_DIR)/$$bin.c $(SDL2) $(JSON) $(CURL) -o $(BUILD_DIR)/$$bin; \
+		$(CC) $(CFLAGS) $(DEBUG_FLAGS) $(SRC_INCLUDES) $(SRC_CMD_DIR)/$$bin.c $(FT) $(SDL2) $(JSON) $(CURL) -o $(BUILD_DIR)/$$bin; \
 	done
 
 clean:
@@ -95,6 +96,7 @@ test: make-build-dir
                                                      $(TEST_INCLUDES)  \
                                                      $(UNITY_INCLUDES) \
                                                      $(UNITY_SRC)      \
+                                                     $(FT)             \
                                                      $(SDL2)           \
                                                      $(JSON)           \
                                                      $(CURL)           \
