@@ -25,9 +25,6 @@ int main(int argc, char *argv[]) {
   Bitmap pen = bitmap_create(arena, 1, 1);
   bitmap_fill(&pen, PALETTE_BLUE);
 
-  Bitmap square = bitmap_create(arena, CELL_SIZE, CELL_SIZE);
-  bitmap_fill(&square, PALETTE_MED_GREEN);
-
   // 1. init FT
   if (FT_Init_FreeType(&library)) {
     fprintf(stderr, "could not initialize FreeType!\n");
@@ -57,9 +54,8 @@ int main(int argc, char *argv[]) {
   // 3. render
   draw_grid(&pen, &(r.screen));
 
-  render_char(face, 'A', &(r.screen), (Point){0, 0}, c, PALETTE_YELLOW);
-  render_char(face, 'a', &(r.screen), (Point){CELL_SIZE, 0}, PALETTE_BLACK, PALETTE_YELLOW);
-  bitblt(&square, &(r.screen), bitmap_rect(&square), (Point){CELL_SIZE*4, 0}, DRAWOP_STORE);
+  render_char(face, 'B', &(r.screen), (Point){0, CELL_SIZE}, c, PALETTE_YELLOW);
+  render_char(face, 'b', &(r.screen), (Point){CELL_SIZE * 2, CELL_SIZE}, PALETTE_BLACK, PALETTE_YELLOW);
 
   runtime_start(&r);
   runtime_destroy(&r);
@@ -82,35 +78,54 @@ void draw_grid(Bitmap *pen, Bitmap *screen) {
 }
 
 void render_char(FT_Face face, char c, Bitmap *b, Point pos, Color bg, Color fg) {
+  printf("render char='%c' at pos=(%d, %d)\n", c, pos.x, pos.y);
 
-  if (FT_Load_Char(face, c, FT_LOAD_RENDER)) {
+  if (FT_Load_Char(face, c, FT_LOAD_RENDER | FT_LOAD_TARGET_MONO | FT_LOAD_NO_HINTING)) {
     fprintf(stderr, "Could not load char '%c'\n", c);
     return;
   }
+  FT_Render_Glyph(face->glyph, FT_RENDER_MODE_MONO);
 
   MemoryArena *scratch = arena_create(0.5 * MB);
 
-  FT_GlyphSlot slot = face->glyph;
-  FT_Bitmap *bitmap = &slot->bitmap;
+  FT_GlyphSlot glyph = face->glyph;
+  FT_Bitmap *bitmap = &glyph->bitmap;
 
   i32 glyph_w = bitmap->width;
   i32 glyph_h = bitmap->rows;
   i32 pitch   = bitmap->pitch;
 
-  Bitmap g = bitmap_create(scratch, glyph_w, glyph_h);
-  bitmap_fill(&g, bg);
+  Bitmap rendered_glyph = bitmap_create(scratch, glyph_w, glyph_h);
+  bitmap_fill(&rendered_glyph, bg);
 
   for (i32 y=0; y < glyph_h; y++) {
+    if (y < 0) {
+      printf("out of bounds: pixel_y=%d, bitmap=(w:%d, h%d)\n", y, rendered_glyph.w, rendered_glyph.h);
+      continue;  // out of bounds check
+    }
+
     for (i32 x=0; x < glyph_w; x++) {
-      u8 val = bitmap->buffer[y * pitch + x];
-      if (val == 0) {
-        continue;
+      if (x < 0 || x >= rendered_glyph.w) {
+	printf("out of bounds: pixel=(%d, %d), bitmap=(w:%d, h%d)\n", x, y, rendered_glyph.w, rendered_glyph.h);
+	continue;
       }
 
-      g.pixels[PIXEL_INDEX(x, y, glyph_w)] = fg;
+      u8 val = bitmap->buffer[(y * pitch) + (x / 8)];
+      bool bit = (val >> (7 - (x % 8))) & 0x01;
+
+      if (bit == 0) {
+	printf("0");
+	continue;
+      }
+
+      printf("1");
+      rendered_glyph.pixels[PIXEL_INDEX(x, y, glyph_w)] = fg;
     }
+    printf("\n");
   }
 
-  bitblt(&g, b, bitmap_rect(&g), pos, DRAWOP_STORE);
+  pos.x -= glyph->bitmap_left;
+  pos.y -= glyph->bitmap_top;
+  bitblt(&rendered_glyph, b, bitmap_rect(&rendered_glyph), pos, DRAWOP_STORE);
   arena_destroy(scratch);
 }
