@@ -54,8 +54,8 @@ int main(int argc, char *argv[]) {
   // 3. render
   draw_grid(&pen, &(r.screen));
 
-  render_char(face, 'B', &(r.screen), (Point){0, CELL_SIZE}, c, PALETTE_YELLOW);
-  render_char(face, 'b', &(r.screen), (Point){CELL_SIZE * 2, CELL_SIZE}, PALETTE_BLACK, PALETTE_YELLOW);
+  render_char(face, 'A', &(r.screen), (Point){0, CELL_SIZE}, c, PALETTE_YELLOW);
+  render_char(face, 'a', &(r.screen), (Point){CELL_SIZE * 2, CELL_SIZE}, PALETTE_BLACK, PALETTE_YELLOW);
 
   runtime_start(&r);
   runtime_destroy(&r);
@@ -84,7 +84,6 @@ void render_char(FT_Face face, char c, Bitmap *b, Point pos, Color bg, Color fg)
     fprintf(stderr, "Could not load char '%c'\n", c);
     return;
   }
-  FT_Render_Glyph(face->glyph, FT_RENDER_MODE_MONO);
 
   MemoryArena *scratch = arena_create(0.5 * MB);
 
@@ -124,7 +123,7 @@ void render_char(FT_Face face, char c, Bitmap *b, Point pos, Color bg, Color fg)
     printf("\n");
   }
 
-  pos.x -= glyph->bitmap_left;
+  pos.x += glyph->bitmap_left;
   pos.y -= glyph->bitmap_top;
   bitblt(&rendered_glyph, b, bitmap_rect(&rendered_glyph), pos, DRAWOP_STORE);
   arena_destroy(scratch);
