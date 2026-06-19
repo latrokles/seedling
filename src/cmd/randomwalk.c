@@ -15,7 +15,7 @@ typedef struct Program {
 int main(void) {
   MemoryArena *arena = arena_create(5 * MB);
   Bitmap pen = bitmap_create(arena, 5, 5);
-  bitmap_fill(&pen, PALETTE_DARK_YELLOW);
+  bitmap_fill(&pen, 0xEEEE9E15);
   Point center = {WIDTH/2, HEIGHT/2};
 
   Program p = { .pos = center, .pen = pen };

@@ -8,6 +8,10 @@
 #include "base.h"
 
 #define PIXEL_INDEX(x, y, w) (y * w) + x
+#define RGBA_RED(color)   (color >> 24) & 0xFF
+#define RGBA_GREEN(color) (color >> 16) & 0xFF
+#define RGBA_BLUE(color)  (color >>  8) & 0xFF
+#define RGBA_ALPHA(color)  color        & 0xFF
 
 typedef uint32_t Color;
 
@@ -77,7 +81,9 @@ void bitblt_clipped(Bitmap *src, Bitmap *dst, Rect src_rect, Point at_pos, Rect 
 void __clip(Bitmap *src, Bitmap *dst, Rect *src_rect, Point *at_pos, Rect clip_rect);
 void __copy_bits(Bitmap *src, Bitmap *dst, Rect src_rect, Point pos, DrawOp op);
 void __merge(Bitmap *src, Bitmap *dst, i32 src_x, i32 src_y, i32 dst_x, i32 dst_y, i32 n, DrawOp op);
+Color __blend_alpha(Color src, Color dst);
 i8   __sign(i32 val);
+
 
 Bitmap bitmap_create(MemoryArena *arena, i32 width, i32 height) {
   Color *pixels = arena_push(arena, (width * height * sizeof(Color)));
@@ -308,19 +314,19 @@ void __merge(Bitmap *src, Bitmap *dst, i32 src_x, i32 src_y, i32 dst_x, i32 dst_
 
       switch(op) {
       case DRAWOP_STORE:
-	dst->pixels[dst_i] = src->pixels[src_i];
+	dst->pixels[dst_i] = __blend_alpha(src->pixels[src_i], dst->pixels[dst_i]);
         break;
       case DRAWOP_STORE_INVERT:
-	dst->pixels[dst_i] = ~src->pixels[src_i];
+	dst->pixels[dst_i] = __blend_alpha(~src->pixels[src_i], dst->pixels[dst_i]);
 	break;
       case DRAWOP_OR:
-	dst->pixels[dst_i] |= src->pixels[src_i];
+	dst->pixels[dst_i] = __blend_alpha(dst->pixels[dst_i] | src->pixels[src_i], dst->pixels[dst_i]);
         break;
       case DRAWOP_AND:
-        dst->pixels[dst_i] &= src->pixels[src_i];
+        dst->pixels[dst_i] = __blend_alpha(dst->pixels[dst_i] & src->pixels[src_i], dst->pixels[dst_i]);
         break;
       case DRAWOP_XOR:
-        dst->pixels[dst_i] ^= src->pixels[src_i];
+        dst->pixels[dst_i] = __blend_alpha(dst->pixels[dst_i] ^ src->pixels[src_i], dst->pixels[dst_i]);
         break;
       case DRAWOP_CLR:
         dst->pixels[dst_i] = 0x00000000;
@@ -332,6 +338,34 @@ void __merge(Bitmap *src, Bitmap *dst, i32 src_x, i32 src_y, i32 dst_x, i32 dst_
       src_x++;
       dst_x++;
   }
+}
+
+Color __blend_alpha(Color src, Color dst) {
+  // ASSUMES RGBA PIXEL FORMAT!!!
+
+  u8 alpha = RGBA_ALPHA(src);
+  u8 alpha_inv = 256 - alpha;
+
+  // 1. unpack src and dst into their individual channels
+  u8 src_r = RGBA_RED(src);
+  u8 src_g = RGBA_GREEN(src);
+  u8 src_b = RGBA_BLUE(src);
+
+  u8 dst_r = RGBA_RED(dst);
+  u8 dst_g = RGBA_GREEN(dst);
+  u8 dst_b = RGBA_BLUE(dst);
+
+  // 2. avoid any work at the opacity extremes
+  if (alpha == 255) { return src; }  // fully opaque, no blending
+  if (alpha ==   0) { return dst; }  // fully transparent, no blending
+
+  // 3. perform the blending
+  u8 out_r = (src_r * alpha + dst_r * alpha_inv) >> 8;
+  u8 out_g = (src_g * alpha + dst_g * alpha_inv) >> 8;
+  u8 out_b = (src_b * alpha + dst_b * alpha_inv) >> 8;
+
+  // 4. re-pack the individual channels into a 32bit color
+  return (out_r << 24) | (out_g << 16) | (out_b << 8) | 0xFF;
 }
 
 i8 __sign(i32 val) {

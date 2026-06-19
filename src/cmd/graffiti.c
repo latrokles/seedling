@@ -32,7 +32,7 @@ int main(void) {
   MemoryArena *arena = arena_create(200 * MB);
 
   Bitmap pen = bitmap_create(arena, 10, 10);
-  bitmap_fill(&pen, PALETTE_YELLOW);
+  bitmap_fill(&pen, 0xFFFF0017);
 
   Runtime runtime = runtime_create(arena,
 				   STRING8("graffiti"),
