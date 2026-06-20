@@ -69,6 +69,9 @@ void   bitmap_set_pixel(Bitmap *b, i32 x, i32 y, Color color);
 void   bitmap_clear(Bitmap *b);
 void   bitmap_fill(Bitmap *b, Color color);
 
+void bitblt(Bitmap *src, Bitmap *dst, Rect src_rect, Point at_pos, DrawOp op);
+void bitblt_clipped(Bitmap *src, Bitmap *dst, Rect src_rect, Point at_pos, Rect clip_rect, DrawOp op);
+
 void draw_line(Bitmap *brush, Bitmap *dst, Point from, Point to, DrawOp op);
 void draw_line_clipped(Bitmap *brush, Bitmap *dst, Point from, Point to, Rect clip_rect, DrawOp op);
 void draw_rect(Bitmap *brush, Bitmap *dst, Point origin, Point corner, Rect clip_rect, DrawOp op);
@@ -76,8 +79,6 @@ void draw_rect_fill(Bitmap *brush, Bitmap *dst, Point origin, Point corner, Rect
 void draw_circle(Bitmap *brush, Bitmap *dst, Point center, i32 radius, Rect clip_rect, DrawOp op);
 void draw_circle_fill(Bitmap *brush, Bitmap *dst, Point center, i32 radius, Rect clip_rect, DrawOp op);
 
-void bitblt(Bitmap *src, Bitmap *dst, Rect src_rect, Point at_pos, DrawOp op);
-void bitblt_clipped(Bitmap *src, Bitmap *dst, Rect src_rect, Point at_pos, Rect clip_rect, DrawOp op);
 void __clip(Bitmap *src, Bitmap *dst, Rect *src_rect, Point *at_pos, Rect clip_rect);
 void __copy_bits(Bitmap *src, Bitmap *dst, Rect src_rect, Point pos, DrawOp op);
 void __merge(Bitmap *src, Bitmap *dst, i32 src_x, i32 src_y, i32 dst_x, i32 dst_y, i32 n, DrawOp op);

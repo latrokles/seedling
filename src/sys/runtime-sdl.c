@@ -1,5 +1,6 @@
 #include <assert.h>
 #include <stdio.h>
+#include <string.h>
 
 #include <SDL.h>
 
@@ -49,7 +50,7 @@ struct Runtime {
 void on_step(Runtime *runtime);
 void on_key_down(Runtime *runtime);
 void on_key_up(Runtime *runtime);
-void on_text_in(Runtime *runtime);
+void on_text_in(Runtime *runtime, String8 s);
 void on_mouse_down(Runtime *runtime);
 void on_mouse_up(Runtime *runtime);
 void on_mouse_motion(Runtime *runtime);
@@ -190,11 +191,14 @@ void _step(Runtime *runtime) {
       break;
     case SDL_TEXTINPUT:
       _text_in(runtime, event);
+      runtime->needs_redisplay = true;
     case SDL_KEYDOWN:
       _key_down(runtime, event);
+      runtime->needs_redisplay = true;
       break;
     case SDL_KEYUP:
       _key_up(runtime, event);
+      runtime->needs_redisplay = true;
       break;
     case SDL_MOUSEBUTTONDOWN:
       _mouse_down(runtime, event);
@@ -221,8 +225,12 @@ void _step(Runtime *runtime) {
 
 void _text_in(Runtime *runtime, SDL_Event event) {
   // https://wiki.libsdl.org/SDL2/SDL_TextInputEvent
-  printf("TextInput: text=%s\n", event.text.text);
-  if (runtime->on_text_in) { runtime->on_text_in(runtime, STRING8(event.text.text)); }
+  char *captured = event.text.text;
+  u64 captured_len = strlen(event.text.text);
+
+  printf("TextInput: text=%s, length=%lu\n", captured, captured_len);
+  String8 s = {captured, captured_len};
+  if (runtime->on_text_in) { runtime->on_text_in(runtime, s); }
 }
 
 void _key_down(Runtime *runtime, SDL_Event event) {
