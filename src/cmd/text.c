@@ -10,7 +10,7 @@
 #define WIDTH 800
 #define HEIGHT 608
 
-#define CELL_SIZE 16
+#define FONT_SIZE 16
 
 typedef struct TextWriter {
   Font font;
@@ -19,7 +19,6 @@ typedef struct TextWriter {
   Bitmap pen;
 } TextWriter;
 
-void draw_grid(Bitmap *pen, Bitmap *screen);
 void render_char(FT_Face face, char c, Bitmap *b, Point pos, Color bg, Color fg);
 
 int main(int argc, char *argv[]) {
@@ -31,14 +30,12 @@ int main(int argc, char *argv[]) {
   Runtime r = runtime_create(arena, STRING8("text input and rendering"), (Point){-1, -1}, WIDTH, HEIGHT, 1);
 
   TextWriter ctx = {
-    .font = font_create(arena, string8_from_charbuf(arena, fontpath, fontpath_len), CELL_SIZE, CELL_SIZE),
+    .font = font_create(arena, string8_from_charbuf(arena, fontpath, fontpath_len), FONT_SIZE, FONT_SIZE),
     .text_color = PALETTE_DARK_YELLOW,
-    .cursor = (Point){0, CELL_SIZE},
+    .cursor = (Point){0, FONT_SIZE},
     .pen = bitmap_create(arena, 1, 1),
   };
   bitmap_fill(&(ctx.pen), PALETTE_BLUE);
-
-  draw_grid(&(ctx.pen), &(r.screen));
 
   r.context = (void *)&ctx;
   r.on_text_in = on_text_in;
@@ -47,26 +44,14 @@ int main(int argc, char *argv[]) {
   arena_destroy(arena);
 }
 
-void draw_grid(Bitmap *pen, Bitmap *screen) {
-  i32 cols = WIDTH / CELL_SIZE;
-  i32 rows = HEIGHT / CELL_SIZE;
-
-  for (i32 r=0; r < rows; r++) {
-    for (i32 c=0; c < cols; c++) {
-      draw_line(pen, screen, (Point){CELL_SIZE*c, 0}, (Point){CELL_SIZE*c, HEIGHT}, DRAWOP_STORE);
-    }
-    draw_line(pen, screen, (Point){0, CELL_SIZE*r}, (Point){WIDTH, CELL_SIZE*r}, DRAWOP_STORE);
-  }
-}
-
 void on_text_in(Runtime *runtime, String8 s) {
   TextWriter *ctx = (TextWriter *)(runtime->context);
 
   printf("invoked on_text_in, s.data=%s, s.length=%lu\n", s.data, s.length);
   for (u64 i=0; i < s.length; i++) {
     printf("loop...");
-    font_render_char(&(ctx->font), s.data[i], &(runtime->screen), ctx->cursor, ctx->text_color);
-    ctx->cursor.x += ctx->font.w;
+    Point move = font_render_char(&(ctx->font), s.data[i], &(runtime->screen), ctx->cursor, ctx->text_color);
+    ctx->cursor.x += move.x;
   }
   printf("\n");
 }
