@@ -36,6 +36,9 @@ struct Runtime {
 
   void *context;
   void (*on_step)(Runtime *);
+  void (*on_text_in)(Runtime *, String8);
+  void (*on_key_down)(Runtime *);
+  void (*on_key_up)(Runtime *);
   void (*on_mouse_down)(Runtime *);
   void (*on_mouse_up)(Runtime *);
   void (*on_mouse_motion)(Runtime *);
@@ -44,6 +47,9 @@ struct Runtime {
 
 /* --- prototypes for runtime callbacks --- */
 void on_step(Runtime *runtime);
+void on_key_down(Runtime *runtime);
+void on_key_up(Runtime *runtime);
+void on_text_in(Runtime *runtime);
 void on_mouse_down(Runtime *runtime);
 void on_mouse_up(Runtime *runtime);
 void on_mouse_motion(Runtime *runtime);
@@ -60,9 +66,14 @@ void runtime_destroy(Runtime *runtime);
 
 void _run(Runtime *runtime);
 void _step(Runtime *runtime);
+void _key_down(Runtime *runtime, SDL_Event event);
+void _key_up(Runtime *runtime, SDL_Event event);
+void _text_in(Runtime *runtime, SDL_Event event);
 void _mouse_down(Runtime *runtime, SDL_Event event);
 void _mouse_up(Runtime *runtime, SDL_Event event);
 void _mouse_pos(Runtime *runtime, SDL_Event event);
+
+void __print_key_info(String8 type, SDL_Keysym key);
 
 Runtime runtime_create(MemoryArena *arena, String8 title, Point position, i32 width, i32 height, u32 zoom) {
   if (SDL_Init(SDL_INIT_VIDEO) < 0) {
@@ -115,6 +126,7 @@ Runtime runtime_create(MemoryArena *arena, String8 title, Point position, i32 wi
 }
 
 void runtime_start(Runtime *runtime) {
+  SDL_StartTextInput();
   runtime->is_executing = true;
   runtime_redisplay(runtime);
   _run(runtime);
@@ -122,6 +134,7 @@ void runtime_start(Runtime *runtime) {
 
 void runtime_stop(Runtime *runtime) {
   runtime->is_executing = false;
+  SDL_StopTextInput();
 }
 
 void runtime_redisplay(Runtime *runtime) {
@@ -175,6 +188,14 @@ void _step(Runtime *runtime) {
     case SDL_QUIT:
       runtime_stop(runtime);
       break;
+    case SDL_TEXTINPUT:
+      _text_in(runtime, event);
+    case SDL_KEYDOWN:
+      _key_down(runtime, event);
+      break;
+    case SDL_KEYUP:
+      _key_up(runtime, event);
+      break;
     case SDL_MOUSEBUTTONDOWN:
       _mouse_down(runtime, event);
       runtime->needs_redisplay = true;
@@ -196,7 +217,22 @@ void _step(Runtime *runtime) {
       break;
     }
   }
+}
 
+void _text_in(Runtime *runtime, SDL_Event event) {
+  // https://wiki.libsdl.org/SDL2/SDL_TextInputEvent
+  printf("TextInput: text=%s\n", event.text.text);
+  if (runtime->on_text_in) { runtime->on_text_in(runtime, STRING8(event.text.text)); }
+}
+
+void _key_down(Runtime *runtime, SDL_Event event) {
+  __print_key_info(STRING8("Pressed"), event.key.keysym);
+  if (runtime->on_key_down) { runtime->on_key_down(runtime); }
+}
+
+void _key_up(Runtime *runtime, SDL_Event event) {
+  __print_key_info(STRING8("Released"), event.key.keysym);
+  if (runtime->on_key_up) { runtime->on_key_up(runtime); }
 }
 
 void _mouse_down(Runtime *runtime, SDL_Event event) {
@@ -214,9 +250,7 @@ void _mouse_down(Runtime *runtime, SDL_Event event) {
     break;
   }
 
-  if (runtime->on_mouse_down) {
-    runtime->on_mouse_down(runtime);
-  }
+  if (runtime->on_mouse_down) { runtime->on_mouse_down(runtime); }
 }
 
 void _mouse_up(Runtime *runtime, SDL_Event event) {
@@ -234,9 +268,7 @@ void _mouse_up(Runtime *runtime, SDL_Event event) {
     break;
   }
 
-  if (runtime->on_mouse_up) {
-    runtime->on_mouse_up(runtime);
-  }
+  if (runtime->on_mouse_up) { runtime->on_mouse_up(runtime); }
 }
 
 void _mouse_pos(Runtime *runtime, SDL_Event event) {
@@ -245,7 +277,31 @@ void _mouse_pos(Runtime *runtime, SDL_Event event) {
   runtime->mouse_curr.x = event.motion.x;
   runtime->mouse_curr.y = event.motion.y;
 
-  if (runtime->on_mouse_motion) {
-    runtime->on_mouse_motion(runtime);
-  }
+  if (runtime->on_mouse_motion) { runtime->on_mouse_motion(runtime); }
+}
+
+void __print_key_info(String8 type, SDL_Keysym key) {
+  printf("%s: ", type.data);
+  printf("key=%s, ", SDL_GetKeyName(key.sym));
+
+  // https://wiki.libsdl.org/SDL2/SDL_Keymod
+  printf("modifiers=[");
+  if (key.mod == KMOD_NONE) { printf("N/A"); }
+
+  if (key.mod & KMOD_NUM)    { printf(" NUMLOCK "); }
+  if (key.mod & KMOD_CAPS)   { printf(" CAPSLOCK "); }
+  if (key.mod & KMOD_SCROLL) { printf(" SCROLLLOCK "); }
+  if (key.mod & KMOD_LCTRL)  { printf(" LCTRL "); }
+  if (key.mod & KMOD_RCTRL)  { printf(" RCTRL "); }
+  if (key.mod & KMOD_LSHIFT) { printf(" LSHIFT "); }
+  if (key.mod & KMOD_RSHIFT) { printf(" RSHIFT "); }
+  if (key.mod & KMOD_LALT)   { printf(" LALT "); }
+  if (key.mod & KMOD_RALT)   { printf(" RALT "); }
+  if (key.mod & KMOD_LGUI)   { printf(" LGUI "); }
+  if (key.mod & KMOD_RGUI)   { printf(" LGUI "); }
+  if (key.mod & KMOD_CTRL)   { printf(" CTRL "); }
+  if (key.mod & KMOD_SHIFT)  { printf(" SHIFT "); }
+  if (key.mod & KMOD_ALT)    { printf(" ALT "); }
+  if (key.mod & KMOD_GUI)    { printf(" GUI "); }
+  printf("]\n");
 }
