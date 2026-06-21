@@ -7,10 +7,9 @@
 #include "runtime-sdl.c"
 #include "font.h"
 
-#define WIDTH 800
-#define HEIGHT 608
-
 #define FONT_SIZE 16
+#define COLS 100
+#define ROWS  50
 
 typedef struct TextWriter {
   Font font;
@@ -26,8 +25,10 @@ int main(int argc, char *argv[]) {
   char *fontpath = argv[1];
   i32 fontpath_len = strlen(fontpath);
 
+  int width = COLS * FONT_SIZE;
+  int height = ROWS * FONT_SIZE;
   MemoryArena *arena = arena_create(10 * MB);
-  Runtime r = runtime_create(arena, STRING8("text input and rendering"), (Point){-1, -1}, WIDTH, HEIGHT, 1);
+  Runtime r = runtime_create(arena, STRING8("text input and rendering"), (Point){-1, -1}, width, height, 1);
 
   TextWriter ctx = {
     .font = font_create(arena, string8_from_charbuf(arena, fontpath, fontpath_len), FONT_SIZE, FONT_SIZE),
