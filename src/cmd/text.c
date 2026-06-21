@@ -40,6 +40,7 @@ int main(int argc, char *argv[]) {
 
   r.context = (void *)&ctx;
   r.on_text_in = on_text_in;
+  r.on_key_down = on_key_down;
   runtime_start(&r);
   runtime_destroy(&r);
   arena_destroy(arena);
@@ -51,8 +52,24 @@ void on_text_in(Runtime *runtime, String8 s) {
   printf("invoked on_text_in, s.data=%s, s.length=%lu\n", s.data, s.length);
   for (u64 i=0; i < s.length; i++) {
     printf("loop...");
-    Point move = font_render_char(&(ctx->font), s.data[i], &(runtime->screen), ctx->cursor, ctx->text_color);
-    ctx->cursor.x += move.x;
+    Glyph g = font_render_char(&(ctx->font), s.data[i], &(runtime->screen), ctx->cursor, ctx->text_color);
+    ctx->cursor.x += g.x_advance + g.x_bearing_h;
   }
   printf("\n");
+}
+
+void on_key_down(Runtime *runtime) {
+  TextWriter *ctx = (TextWriter *)(runtime->context);
+
+  if (runtime->keyboard.keys[K_RETURN]) {
+    ctx->cursor.x = 0;
+    ctx->cursor.y += FONT_SIZE;
+  }
+
+  if (runtime->keyboard.keys[K_BACKSPACE]) {
+    Glyph g = ctx->font.glyphs[0];
+    ctx->cursor.x -= (g.x_advance + g.x_bearing_h);
+    // FIXME clear/delete the space... not needing with proper text buffer
+    font_render_char(&(ctx->font), ' ', &(runtime->screen), ctx->cursor, ctx->text_color);
+  }
 }

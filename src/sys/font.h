@@ -21,6 +21,7 @@ typedef struct Glyph {
   i32 y_offset;  // sub
   i32 x_advance;
   i32 y_advance;
+  i32 x_bearing_h;
 } Glyph;
 
 typedef struct Font {
@@ -35,8 +36,7 @@ typedef struct Font {
 
 Font font_create(MemoryArena *arena, String8 fontpath, i32 width, i32 height);
 void font_destroy(Font *font);
-Point font_render_char(Font *font, char c, Bitmap *dst, Point pos, Color fg);
-
+Glyph font_render_char(Font *font, char c, Bitmap *dst, Point pos, Color fg);
 Glyph __preload_glyph(MemoryArena *arena, FT_Face face, char c);
 
 Font font_create(MemoryArena *arena, String8 fontpath, i32 width, i32 height) {
@@ -76,7 +76,7 @@ void font_destroy(Font *font) {
   FT_Done_FreeType(font->lib);
 }
 
-Point font_render_char(Font *font, char c, Bitmap *dst, Point pos, Color fg) {
+Glyph font_render_char(Font *font, char c, Bitmap *dst, Point pos, Color fg) {
   MemoryArena *scratch = arena_create(2 * (font->w * font->h * sizeof(Color)));
   Bitmap mask = bitmap_create(scratch, font->w, font->h);
   bitmap_fill(&mask, fg);
@@ -94,7 +94,7 @@ Point font_render_char(Font *font, char c, Bitmap *dst, Point pos, Color fg) {
 
   bitblt(&(g.bitmap), dst, bitmap_rect(&(g.bitmap)), pos, DRAWOP_STORE);
   arena_destroy(scratch);
-  return (Point){g.x_advance, g.y_advance};
+  return g;
 }
 
 Glyph __preload_glyph(MemoryArena *arena, FT_Face face, char c) {
@@ -109,6 +109,7 @@ Glyph __preload_glyph(MemoryArena *arena, FT_Face face, char c) {
 
   FT_GlyphSlot ft_glyph = face->glyph;
   FT_Bitmap *ft_bitmap  = &ft_glyph->bitmap;
+  FT_Glyph_Metrics ft_metrics = ft_glyph->metrics;
 
   i32 ft_glyph_w = ft_bitmap->width;
   i32 ft_glyph_h = ft_bitmap->rows;
@@ -141,6 +142,7 @@ Glyph __preload_glyph(MemoryArena *arena, FT_Face face, char c) {
     .y_offset = ft_glyph->bitmap_top,
     .x_advance = (ft_glyph->advance.x / 64),
     .y_advance = (ft_glyph->advance.y / 64),
+    .x_bearing_h = (ft_metrics.horiBearingX / 64),
   };
 }
 
