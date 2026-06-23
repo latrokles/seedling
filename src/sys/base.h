@@ -67,6 +67,7 @@ typedef size_t usize;
 #include <string.h>
 
 /* --- definitions --- */
+#define KB    1000
 #define MB 1000000
 
 typedef struct MemoryArena {

@@ -346,6 +346,7 @@ void _key_down(Runtime *runtime, SDL_Event event) {
     runtime->keyboard.keys[code] = true;
   }
 
+  // TODO handle fn keys, modifiers, arrows
   if (runtime->on_key_down) { runtime->on_key_down(runtime); }
 }
 
@@ -357,6 +358,7 @@ void _key_up(Runtime *runtime, SDL_Event event) {
     runtime->keyboard.keys[code] = false;
   }
 
+  // TODO handle fn keys, modifiers, arrows
   if (runtime->on_key_up) { runtime->on_key_up(runtime); }
 }
 
