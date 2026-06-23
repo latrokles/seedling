@@ -103,12 +103,9 @@ void on_step(Runtime *runtime) {
 void on_text_in(Runtime *runtime, String8 s) {
   TextWriter *ctx = (TextWriter *)(runtime->context);
 
-  printf("invoked on_text_in, s.data=%s, s.length=%lu\n", s.data, s.length);
   for (u64 i=0; i < s.length; i++) {
-    printf("loop...");
     buffer_insert(&(ctx->buffer), s.data[i]);
   }
-  printf("\n");
   ctx->dirty = true;
 }
 

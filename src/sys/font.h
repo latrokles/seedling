@@ -81,9 +81,9 @@ Glyph font_render_char(Font *font, char c, Bitmap *dst, Point pos, Color fg) {
   Bitmap mask = bitmap_create(scratch, font->w, font->h);
   bitmap_fill(&mask, fg);
 
-  printf("Rendering char='%c' -- ", c);
+  // printf("Rendering char='%c' -- ", c);
   Glyph g = font->glyphs[(u8)c - 32];
-  printf("found glyph -- ");
+  // printf("found glyph -- ");
 
   //bitblt(&(g.bitmap), &mask, bitmap_rect(&(g.bitmap)), (Point){0, 0}, DRAWOP_AND);
   // printf("blitted mask\n");
