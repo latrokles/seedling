@@ -73,7 +73,7 @@ void on_step(Runtime *runtime) {
 
   // draw text to the left of the gap
   for (i32 li=0; li < ctx->buffer.gap_start; li++) {
-    if (ctx->buffer.buf[li] == '\n') {
+    if ((ctx->buffer.buf[li] == '\n') || (ctx->cursor.x >= runtime->width - FONT_SIZE)) {
       // found new line, go to start of the next line
       ctx->cursor.x = 0;
       ctx->cursor.y += FONT_SIZE;
@@ -86,7 +86,7 @@ void on_step(Runtime *runtime) {
 
   // print data to the right of the gap
   for (i32 ri=ctx->buffer.gap_end; ri < ctx->buffer.size; ri++) {
-    if (ctx->buffer.buf[ri] == '\n') {
+    if ((ctx->buffer.buf[ri] == '\n') || (ctx->cursor.x >= runtime->width - FONT_SIZE)) {
       // found new line, go to start of the next line
       ctx->cursor.x = 0;
       ctx->cursor.y += FONT_SIZE;
