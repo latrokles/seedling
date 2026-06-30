@@ -8,9 +8,9 @@
 #include "font.h"
 #include "buffer.h"
 
-#define FONT_SIZE 16
-#define COLS 100
-#define ROWS  50
+#define FONT_SIZE 13
+#define COLS 80
+#define ROWS 40
 
 typedef struct TextWriter {
   Font font;
