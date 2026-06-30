@@ -51,7 +51,7 @@ Font font_create(MemoryArena *arena, String8 fontpath, i32 width, i32 height) {
 
   // 2. load font
   if (FT_New_Face(library, fontpath.data, 0, &face)) {
-    fprintf(stderr, "could not load font!");
+    fprintf(stderr, "could not load font=%s!", fontpath.data);
     FT_Done_FreeType(library);
     abort();
   }
